@@ -72,7 +72,7 @@ export default function PlatformPage() {
             </p>
           </div>
 
-          <div className="flex h-[320px] items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+          <div className="flex h-80 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
             Chart / analytics widget goes here
           </div>
         </div>

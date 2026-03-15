@@ -1,41 +1,51 @@
 "use client";
 
+import { createContext, ReactNode, useCallback, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import React from "react";
+import { getUserProfile } from "@/lib/data/me";
 import { UserResponse } from "@/schemas/user";
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
 
-type UserContextValue = {
+interface AppContextType {
   user: UserResponse | null;
+  authUser: User | null;
   setUser: (user: UserResponse | null) => void;
-};
+  refreshUser: () => Promise<void>;
+}
 
-const UserContext = createContext<UserContextValue | undefined>(undefined);
+const AppContext = createContext<AppContextType | null>(null);
 
 export default function UserProvider({
   children,
-  initialUser,
+  user: initialUser,
+  authUser,
 }: {
   children: ReactNode;
-  initialUser: UserResponse | null;
+  user: UserResponse | null;
+  authUser: User | null;
 }) {
-  const [user, setUser] = useState<UserResponse | null>(initialUser);
+  const [user, setUser] = useState(initialUser);
 
-  const value = useMemo(() => ({ user, setUser }), [user]);
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await getUserProfile();
+      setUser(res);
+    } catch (err) {
+      console.error("refreshUser error:", err);
+    }
+  }, []);
 
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
+  return (
+    <AppContext.Provider value={{ user, authUser, setUser, refreshUser }}>
+      {children}
+    </AppContext.Provider>
+  );
 }
 
 export function useUser() {
-  const context = useContext(UserContext);
-
+  const context = React.useContext(AppContext);
   if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
+    throw new Error("useAppContext must be used within a UserProvider");
   }
-
   return context;
 }

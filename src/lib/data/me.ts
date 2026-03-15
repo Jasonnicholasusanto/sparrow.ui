@@ -20,8 +20,9 @@ export async function getUserProfile(): Promise<UserResponse | null> {
 
 export async function createProfile(data: {
   full_name: string;
-  dob: string;
+  birth_date: string;
   username: string;
+  phone_number: string;
   email_address: string;
 }) {
   return apiClient<UserResponse>(
