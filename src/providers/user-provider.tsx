@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useCallback, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import React from "react";
-import { getUserProfile } from "@/lib/data/me";
+import { getUserProfile } from "@/lib/data/server/me";
 import { UserResponse } from "@/schemas/user";
 
 interface AppContextType {

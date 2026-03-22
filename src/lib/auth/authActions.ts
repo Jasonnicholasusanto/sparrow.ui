@@ -85,3 +85,12 @@ export async function getSessionAction() {
   }
   return data.session ?? null;
 }
+
+export async function getAccessToken(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data?.session) {
+    redirect("/auth/login");
+  }
+  return data.session?.access_token ?? null;
+}

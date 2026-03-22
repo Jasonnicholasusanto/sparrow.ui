@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
-import { loginAction, loginGoogle, LoginState } from "@/services/authActions";
+import { loginAction, loginGoogle, LoginState } from "@/lib/auth/authActions";
 import { useActionState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 

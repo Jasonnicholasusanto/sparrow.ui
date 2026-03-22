@@ -1,13 +1,23 @@
+"use client";
+
 import {
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
-  Bitcoin,
-  BriefcaseBusiness,
+  Brain,
+  Briefcase,
+  ChevronRight,
   Globe,
   Newspaper,
   Sparkles,
-  Star,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -15,100 +25,172 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import BorderGlow from "@/components/border-glow";
 
-const watchlists = [
+type Watchlist = {
+  id: string;
+  name: string;
+  description: string;
+  stocksCount: number;
+  dailyChange: number;
+  topTicker: string;
+};
+
+type MarketItem = {
+  symbol: string;
+  name: string;
+  price: string;
+  change: number;
+};
+
+type NewsItem = {
+  id: string;
+  category: string;
+  title: string;
+  summary: string;
+  sentiment: "Bullish" | "Bearish" | "Neutral";
+  relatedTickers: string[];
+  time: string;
+};
+
+type InsightItem = {
+  id: string;
+  title: string;
+  description: string;
+  tone: "positive" | "negative" | "neutral";
+};
+
+const userName = "Jason";
+
+const watchlists: Watchlist[] = [
   {
+    id: "1",
     name: "Tech Giants",
-    stocks: ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN"],
-    change: 2.34,
+    description: "Large-cap tech leaders with strong momentum.",
+    stocksCount: 7,
+    dailyChange: 2.34,
+    topTicker: "NVDA",
   },
   {
+    id: "2",
     name: "Dividend Picks",
-    stocks: ["KO", "JNJ", "PG", "PEP", "MCD"],
-    change: -0.82,
+    description: "Stable names focused on yield and defensiveness.",
+    stocksCount: 6,
+    dailyChange: -0.82,
+    topTicker: "KO",
   },
   {
+    id: "3",
     name: "AI & Chips",
-    stocks: ["NVDA", "AMD", "TSM", "SMCI", "AVGO"],
-    change: 4.91,
+    description: "Semiconductors and AI infrastructure exposure.",
+    stocksCount: 6,
+    dailyChange: 4.91,
+    topTicker: "AVGO",
   },
 ];
 
-const worldIndices = [
-  { name: "S&P 500", symbol: "SPX", value: "5,214.42", change: 0.84 },
-  { name: "NASDAQ", symbol: "IXIC", value: "16,388.24", change: 1.12 },
-  { name: "Dow Jones", symbol: "DJI", value: "39,204.15", change: -0.28 },
-  { name: "ASX 200", symbol: "XJO", value: "7,812.60", change: 0.46 },
-  { name: "Nikkei 225", symbol: "N225", value: "39,104.91", change: 0.91 },
-  { name: "FTSE 100", symbol: "UKX", value: "8,124.88", change: -0.17 },
+const keyMovers: MarketItem[] = [
+  { symbol: "NVDA", name: "NVIDIA", price: "$943.20", change: 3.82 },
+  { symbol: "PLTR", name: "Palantir", price: "$31.87", change: 4.29 },
+  { symbol: "TSLA", name: "Tesla", price: "$188.44", change: -1.64 },
+  { symbol: "AAPL", name: "Apple", price: "$213.21", change: 1.18 },
 ];
 
-const cryptoOverview = [
-  { name: "Bitcoin", symbol: "BTC", value: "$84,920", change: 2.81 },
-  { name: "Ethereum", symbol: "ETH", value: "$4,180", change: 1.49 },
-  { name: "Solana", symbol: "SOL", value: "$191.22", change: 5.74 },
-  { name: "XRP", symbol: "XRP", value: "$0.72", change: -1.11 },
+const majorIndices: MarketItem[] = [
+  { symbol: "SPX", name: "S&P 500", price: "5,214.56", change: 0.74 },
+  { symbol: "NDX", name: "Nasdaq 100", price: "18,205.42", change: 1.21 },
+  { symbol: "DJI", name: "Dow Jones", price: "39,442.18", change: -0.18 },
+  { symbol: "ASX200", name: "ASX 200", price: "7,812.30", change: 0.26 },
 ];
 
-const spotlightStocks = [
+const newsItems: NewsItem[] = [
   {
-    symbol: "NVDA",
-    name: "NVIDIA",
-    price: "$943.20",
-    change: 3.82,
-    note: "Semiconductor momentum remains strong.",
-  },
-  {
-    symbol: "TSLA",
-    name: "Tesla",
-    price: "$188.44",
-    change: -1.64,
-    note: "High volatility and strong retail attention.",
-  },
-  {
-    symbol: "PLTR",
-    name: "Palantir",
-    price: "$31.87",
-    change: 4.29,
-    note: "AI and defense themes driving interest.",
-  },
-  {
-    symbol: "MSFT",
-    name: "Microsoft",
-    price: "$428.61",
-    change: 1.14,
-    note: "Cloud and AI continue to support strength.",
-  },
-];
-
-const newsItems = [
-  {
-    title: "US equities rally as AI names lead gains",
-    source: "Bloomberg-style placeholder",
+    id: "1",
+    category: "Earnings",
+    title: "NVIDIA extends gains as AI demand narrative strengthens",
+    summary:
+      "Investors continue pricing in strong data-centre demand, with sentiment remaining constructive across semiconductor names.",
+    sentiment: "Bullish",
+    relatedTickers: ["NVDA", "AMD", "AVGO"],
     time: "2h ago",
-    tag: "Markets",
   },
   {
-    title: "Bitcoin rises as institutional flows pick up",
-    source: "CryptoWire placeholder",
-    time: "3h ago",
-    tag: "Crypto",
+    id: "2",
+    category: "Macro",
+    title: "Markets reassess rate path after fresh inflation commentary",
+    summary:
+      "Growth and tech names remain sensitive as traders weigh how long higher rates could persist into the next quarter.",
+    sentiment: "Neutral",
+    relatedTickers: ["QQQ", "SPY", "TSLA"],
+    time: "4h ago",
   },
   {
-    title: "Fed commentary keeps rate-cut hopes alive",
-    source: "Macro Daily placeholder",
+    id: "3",
+    category: "Risk",
+    title: "Tesla volatility picks up as delivery expectations shift",
+    summary:
+      "Short-term price action has become more reactive, increasing headline risk for momentum-focused watchlists.",
+    sentiment: "Bearish",
+    relatedTickers: ["TSLA"],
     time: "5h ago",
-    tag: "Macro",
-  },
-  {
-    title: "Semiconductor stocks remain in spotlight",
-    source: "Market Pulse placeholder",
-    time: "6h ago",
-    tag: "Stocks",
   },
 ];
+
+const aiInsights: InsightItem[] = [
+  {
+    id: "1",
+    title: "Portfolio concentration risk",
+    description:
+      "Your watchlists are currently tilted heavily toward tech and AI, which could amplify downside during risk-off sessions.",
+    tone: "negative",
+  },
+  {
+    id: "2",
+    title: "Momentum remains favourable",
+    description:
+      "Semiconductor exposure is still leading your current watchlist performance, with multiple names showing continued strength.",
+    tone: "positive",
+  },
+  {
+    id: "3",
+    title: "Key event to watch",
+    description:
+      "Upcoming macro commentary and earnings releases may drive the next leg of movement across your highest-conviction names.",
+    tone: "neutral",
+  },
+];
+
+function getGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function getSentimentBadgeClass(sentiment: NewsItem["sentiment"]) {
+  if (sentiment === "Bullish") {
+    return "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10";
+  }
+
+  if (sentiment === "Bearish") {
+    return "bg-rose-500/10 text-rose-600 hover:bg-rose-500/10";
+  }
+
+  return "bg-slate-500/10 text-slate-600 hover:bg-slate-500/10";
+}
+
+function getInsightToneClass(tone: InsightItem["tone"]) {
+  if (tone === "positive") {
+    return "border-emerald-500/20 bg-emerald-500/5";
+  }
+
+  if (tone === "negative") {
+    return "border-rose-500/20 bg-rose-500/5";
+  }
+
+  return "border-border bg-muted/30";
+}
 
 function ChangePill({ value }: { value: number }) {
   const positive = value >= 0;
@@ -132,241 +214,321 @@ function ChangePill({ value }: { value: number }) {
   );
 }
 
-export default function DashboardPage() {
+function SectionHeading({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description?: string;
+}) {
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border bg-card/70 p-6 shadow-sm backdrop-blur">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <Badge variant="secondary" className="rounded-full px-3 py-1">
-              Sparrow Dashboard
-            </Badge>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Welcome back, Jayn 👋
-            </h1>
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              Here’s your simple market snapshot for today — watchlists,
-              spotlight stocks, macro sentiment, crypto, and the latest news in
-              one place.
-            </p>
-          </div>
+    <div className="mb-4 flex items-start gap-3">
+      <div className="mt-0.5 rounded-2xl border bg-background p-2 text-muted-foreground">
+        {icon}
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Card className="rounded-2xl">
-              <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">Watchlists</div>
-                <div className="mt-1 text-2xl font-semibold">3</div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">Spotlight</div>
-                <div className="mt-1 text-2xl font-semibold">4</div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardContent className="p-4">
-                <div className="text-xs text-muted-foreground">News</div>
-                <div className="mt-1 text-2xl font-semibold">24</div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+export default function DashboardPage() {
+  const greeting = getGreeting();
+  const today = format(new Date(), "EEEE, d MMMM yyyy");
 
-      <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-3xl">
+  return (
+    <div className="space-y-8">
+      <section>
+        <Card className="overflow-hidden rounded-3xl">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <BriefcaseBusiness className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Watchlists</CardTitle>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">{today}</p>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+                {greeting}, {userName}
+              </h1>
             </div>
-            <CardDescription>
-              Your saved baskets and their overall movement.
-            </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            {watchlists.map((watchlist) => (
-              <div
-                key={watchlist.name}
-                className="rounded-2xl border bg-background/60 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-medium">{watchlist.name}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      {watchlist.stocks.join(" • ")}
-                    </div>
-                  </div>
-                  <ChangePill value={watchlist.change} />
+          <CardContent>
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              glowRadius={40}
+              glowIntensity={1}
+              coneSpread={25}
+              animated={false}
+              colors={["#c084fc", "#f472b6", "#38bdf8"]}
+            >
+              <div className="rounded-2xl p-4 shadow-sm">
+                <div className="mb-2 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Daily Brief</span>
                 </div>
+
+                <p className="text-sm leading-6 text-muted-foreground md:text-base">
+                  Your watchlists are showing mixed momentum today, with AI and
+                  semiconductor exposure continuing to lead performance. Risk
+                  remains concentrated in high-growth tech, while macro
+                  commentary and upcoming earnings could drive short-term
+                  volatility. The strongest current tailwind is positive
+                  sentiment around AI leaders, but names with stretched
+                  valuations may react sharply to any negative surprise.
+                </p>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Market Overview</CardTitle>
-            </div>
-            <CardDescription>Major world indices at a glance.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {worldIndices.map((index) => (
-              <div
-                key={index.symbol}
-                className="flex items-center justify-between rounded-2xl border px-4 py-3"
-              >
-                <div>
-                  <div className="font-medium">{index.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {index.symbol}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-sm font-medium">{index.value}</div>
-                  <ChangePill value={index.change} />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[0.8fr_1.2fr]">
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bitcoin className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Crypto Overview</CardTitle>
-            </div>
-            <CardDescription>
-              Major crypto movers and sentiment placeholders.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {cryptoOverview.map((coin) => (
-              <div
-                key={coin.symbol}
-                className="flex items-center justify-between rounded-2xl border px-4 py-3"
-              >
-                <div>
-                  <div className="font-medium">{coin.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {coin.symbol}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-sm font-medium">{coin.value}</div>
-                  <ChangePill value={coin.change} />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Spotlight / Trending Stocks</CardTitle>
-            </div>
-            <CardDescription>
-              Stocks currently getting attention across the market.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            {spotlightStocks.map((stock) => (
-              <div
-                key={stock.symbol}
-                className="rounded-2xl border bg-background/60 p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-lg font-semibold">{stock.symbol}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {stock.name}
-                    </div>
-                  </div>
-                  <ChangePill value={stock.change} />
-                </div>
-
-                <Separator className="my-4" />
-
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">{stock.price}</div>
-                  <p className="text-sm text-muted-foreground">{stock.note}</p>
-                </div>
-              </div>
-            ))}
+            </BorderGlow>
           </CardContent>
         </Card>
       </section>
 
       <section>
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Newspaper className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>News</CardTitle>
-            </div>
-            <CardDescription>
-              Placeholder headlines for your home feed.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 lg:grid-cols-2">
-            {newsItems.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border bg-background/60 p-4 transition-colors hover:bg-accent/30"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
+        <SectionHeading
+          icon={<Briefcase className="h-4 w-4" />}
+          title="Your Watchlists"
+          description="Quick access to the groups you are tracking most closely."
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {watchlists.map((watchlist) => (
+            <Card
+              key={watchlist.id}
+              className="rounded-3xl transition-transform hover:-translate-y-0.5"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-base">
+                      {watchlist.name}
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      {watchlist.description}
+                    </CardDescription>
+                  </div>
+                  <ChangePill value={watchlist.dailyChange} />
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Stocks</p>
+                    <p className="font-medium">{watchlist.stocksCount}</p>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-muted-foreground">Leading ticker</p>
+                    <p className="font-medium">{watchlist.topTicker}</p>
+                  </div>
+                </div>
+
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-between"
+                >
+                  <Link href={`/watchlists/${watchlist.id}`}>
+                    Open watchlist
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <div>
+          <SectionHeading
+            icon={<TrendingUp className="h-4 w-4" />}
+            title="Key Movers"
+            description="A quick look at the stocks moving most in your universe."
+          />
+
+          <Card className="rounded-3xl">
+            <CardContent className="p-3">
+              <div className="space-y-2">
+                {keyMovers.map((item) => (
+                  <div
+                    key={item.symbol}
+                    className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{item.symbol}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {item.name}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="font-medium">{item.price}</p>
+                      <p
+                        className={`text-sm ${
+                          item.change >= 0
+                            ? "text-emerald-600"
+                            : "text-rose-600"
+                        }`}
+                      >
+                        {item.change >= 0 ? "+" : ""}
+                        {item.change.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <SectionHeading
+            icon={<Globe className="h-4 w-4" />}
+            title="Major Indices"
+            description="Broader market context to anchor your watchlist movements."
+          />
+
+          <Card className="rounded-3xl">
+            <CardContent className="p-3">
+              <div className="space-y-2">
+                {majorIndices.map((item) => (
+                  <div
+                    key={item.symbol}
+                    className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium">{item.symbol}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {item.name}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="font-medium">{item.price}</p>
+                      <p
+                        className={`text-sm ${
+                          item.change >= 0
+                            ? "text-emerald-600"
+                            : "text-rose-600"
+                        }`}
+                      >
+                        {item.change >= 0 ? "+" : ""}
+                        {item.change.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading
+          icon={<Newspaper className="h-4 w-4" />}
+          title="Latest News"
+          description="Curated headlines tied to your tracked themes and stocks."
+        />
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          {newsItems.map((item) => (
+            <Card
+              key={item.id}
+              className="group rounded-3xl transition-transform hover:-translate-y-0.5"
+            >
+              <CardHeader className="space-y-3 pb-3">
+                <div className="flex items-center justify-between gap-3">
                   <Badge variant="outline" className="rounded-full">
-                    {item.tag}
+                    {item.category}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     {item.time}
                   </span>
                 </div>
-                <h3 className="font-medium leading-snug">{item.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {item.source}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+
+                <CardTitle className="text-base leading-6">
+                  {item.title}
+                </CardTitle>
+                <CardDescription className="line-clamp-3">
+                  {item.summary}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {item.relatedTickers.map((ticker) => (
+                    <Badge
+                      key={ticker}
+                      variant="secondary"
+                      className="rounded-full"
+                    >
+                      {ticker}
+                    </Badge>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant="secondary"
+                    className={getSentimentBadgeClass(item.sentiment)}
+                  >
+                    {item.sentiment}
+                  </Badge>
+
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    Read more
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <section>
-        <Card className="rounded-3xl border-dashed">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Extra ideas for Sparrow</CardTitle>
-            </div>
-            <CardDescription>
-              A few simple features that would genuinely add value later.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              "Daily market mood / sentiment card",
-              "Upcoming earnings calendar",
-              "Recently viewed stocks",
-              "Your portfolio heatmap",
-            ].map((idea) => (
-              <div
-                key={idea}
-                className="rounded-2xl border bg-background/50 px-4 py-3 text-sm text-muted-foreground"
-              >
-                {idea}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <SectionHeading
+          icon={<Brain className="h-4 w-4" />}
+          title="AI Insights"
+          description="Short, high-signal interpretations to help you focus on what matters."
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {aiInsights.map((insight) => (
+            <Card
+              key={insight.id}
+              className={`rounded-3xl border ${getInsightToneClass(insight.tone)}`}
+            >
+              <CardContent className="p-5">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="rounded-2xl border bg-background p-2 text-muted-foreground">
+                    {insight.tone === "positive" ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : insight.tone === "negative" ? (
+                      <AlertTriangle className="h-4 w-4" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                  </div>
+
+                  <Badge variant="outline" className="rounded-full capitalize">
+                    {insight.tone}
+                  </Badge>
+                </div>
+
+                <h3 className="text-base font-semibold">{insight.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {insight.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
     </div>
   );

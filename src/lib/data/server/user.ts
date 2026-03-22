@@ -1,14 +1,14 @@
 "use server";
 
 import { UserPublicResponse } from "@/schemas/publicUser";
-import { apiClient } from "@/services/api/client";
-import { Endpoints } from "@/services/api/endpoints";
+import { Endpoints } from "@/lib/api/endpoints";
+import { serverApiClient } from "@/lib/api/server";
 
 export async function getUserByUsername(
   username: string,
 ): Promise<UserPublicResponse | null> {
   try {
-    return await apiClient<UserPublicResponse>(
+    return await serverApiClient<UserPublicResponse>(
       `${Endpoints.Users.Base}${Endpoints.Users.UserByUsername(username)}`,
       {
         version: Endpoints.Users.BaseVersion,

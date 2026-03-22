@@ -15,7 +15,7 @@ import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { loginGoogle } from "@/services/authActions";
+import { loginGoogle } from "@/lib/auth/authActions";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 

@@ -1,22 +1,8 @@
 "use server";
 
 import { UserResponse } from "@/schemas/user";
-import { apiClient } from "@/services/api/client";
-import { Endpoints } from "@/services/api/endpoints";
-
-export async function getUserProfile(): Promise<UserResponse | null> {
-  try {
-    return await apiClient<UserResponse>(
-      `${Endpoints.Me.Base}${Endpoints.Me.Profile}`,
-      {
-        version: Endpoints.Me.BaseVersion,
-      },
-    );
-  } catch (e: any) {
-    if (e?.status === 404) return null;
-    throw e;
-  }
-}
+import { Endpoints } from "@/lib/api/endpoints";
+import { serverApiClient } from "@/lib/api/server";
 
 export async function createProfile(data: {
   full_name: string;
@@ -25,7 +11,7 @@ export async function createProfile(data: {
   phone_number: string;
   email_address: string;
 }) {
-  return apiClient<UserResponse>(
+  return serverApiClient<UserResponse>(
     `${Endpoints.Me.Base}${Endpoints.Me.Profile}`,
     {
       method: "POST",
@@ -36,7 +22,7 @@ export async function createProfile(data: {
 }
 
 export async function softDeleteProfile() {
-  return apiClient<void>(`${Endpoints.Me.Base}${Endpoints.Me.Profile}`, {
+  return serverApiClient<void>(`${Endpoints.Me.Base}${Endpoints.Me.Profile}`, {
     method: "DELETE",
     version: Endpoints.Me.BaseVersion,
   });
@@ -59,31 +45,22 @@ export async function softDeleteProfile() {
 //   );
 // }
 
-export async function getFollowers() {
-  return apiClient<any[]>(`${Endpoints.Me.Base}${Endpoints.Me.Followers}`, {
-    version: Endpoints.Me.BaseVersion,
-  });
-}
-
-export async function getFollowing() {
-  return apiClient<any[]>(`${Endpoints.Me.Base}${Endpoints.Me.Following}`, {
-    version: Endpoints.Me.BaseVersion,
-  });
-}
-
 export async function updateEmail(data: { email_address: string }) {
-  return apiClient<UserResponse>(`${Endpoints.Me.Base}${Endpoints.Me.Email}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-    version: Endpoints.Me.BaseVersion,
-  });
+  return serverApiClient<UserResponse>(
+    `${Endpoints.Me.Base}${Endpoints.Me.Email}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+      version: Endpoints.Me.BaseVersion,
+    },
+  );
 }
 
 export async function uploadBannerImage(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiClient<{ banner_image_url: string }>(
+  return serverApiClient<{ banner_image_url: string }>(
     `${Endpoints.Me.Base}${Endpoints.Me.UploadBannerImage}`,
     {
       method: "POST",
@@ -95,7 +72,7 @@ export async function uploadBannerImage(file: File) {
 }
 
 export async function deleteBannerImage() {
-  return apiClient<void>(
+  return serverApiClient<void>(
     `${Endpoints.Me.Base}${Endpoints.Me.DeleteBannerImage}`,
     {
       method: "DELETE",
@@ -108,7 +85,7 @@ export async function uploadProfilePicture(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  return apiClient<{ profile_picture_url: string }>(
+  return serverApiClient<{ profile_picture_url: string }>(
     `${Endpoints.Me.Base}${Endpoints.Me.UploadProfilePicture}`,
     {
       method: "POST",
@@ -119,7 +96,7 @@ export async function uploadProfilePicture(file: File) {
 }
 
 export async function deleteProfilePicture() {
-  return apiClient<void>(
+  return serverApiClient<void>(
     `${Endpoints.Me.Base}${Endpoints.Me.DeleteProfilePicture}`,
     {
       method: "DELETE",
@@ -129,7 +106,7 @@ export async function deleteProfilePicture() {
 }
 
 export async function reactivateAccount() {
-  return apiClient<UserResponse>(
+  return serverApiClient<UserResponse>(
     `${Endpoints.Me.Base}${Endpoints.Me.Profile}${Endpoints.Me.Reactivate}`,
     {
       method: "POST",

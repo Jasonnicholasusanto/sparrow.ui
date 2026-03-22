@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, Heart, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { Heart, TrendingDown, TrendingUp } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -8,9 +8,14 @@ import {
   AvatarGroupCount,
   AvatarImage,
 } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 type StockItem = {
   symbol: string;
@@ -71,14 +76,6 @@ const watchlists: Watchlist[] = [
   },
 ];
 
-const trendingItems = [
-  { label: "NVIDIA earnings", type: "Topic", count: "2.3k posts" },
-  { label: "AI stocks", type: "Topic", count: "1.8k posts" },
-  { label: "Bitcoin breakout", type: "Topic", count: "3.1k posts" },
-  { label: "@marketowl", type: "User", count: "14.2k followers" },
-  { label: "@valueorbit", type: "User", count: "10.7k followers" },
-];
-
 function ChangeBadge({ value }: { value: number }) {
   const positive = value >= 0;
 
@@ -121,125 +118,97 @@ function WatchlistAvatarGroup({ stocks }: { stocks: StockItem[] }) {
   );
 }
 
-function SectionCard({
+function SidebarSection({
   title,
   children,
-  contentClassName,
 }: {
   title: string;
   children: React.ReactNode;
-  contentClassName?: string;
 }) {
   return (
-    <Card className="flex min-h-0 flex-col rounded-3xl">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className={contentClassName}>{children}</CardContent>
-    </Card>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex items-center justify-between px-4 py-4">
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+
+      <div className="min-h-0 flex-1 px-2 pb-2">
+        <ScrollArea className="h-full pr-2">{children}</ScrollArea>
+      </div>
+    </div>
   );
 }
 
 export function SidebarPanel() {
   return (
-    <div className="flex min-h-0 flex-col gap-4 h-full sticky top-0">
-      <SectionCard
-        title="Favourite Stocks"
-        contentClassName="min-h-0 flex-1 pt-0"
-      >
-        <ScrollArea className="h-full pr-3">
-          <div className="space-y-3">
-            {favouriteStocks.map((stock) => (
-              <div
-                key={stock.symbol}
-                className="flex items-center justify-between rounded-2xl border px-3 py-3"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{stock.symbol}</span>
-                  </div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {stock.name}
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-sm font-medium">{stock.price}</div>
+    <Card className="flex h-full min-h-0 flex-col rounded-3xl p-0">
+      <CardContent className="min-h-0 flex-1 p-0">
+        <ResizablePanelGroup orientation="vertical" className="h-full min-h-0">
+          <ResizablePanel defaultSize="55%" minSize="30%">
+            <SidebarSection title="Favourite Stocks">
+              <div className="space-y-2">
+                {favouriteStocks.map((stock) => (
                   <div
-                    className={`text-xs ${
-                      stock.change >= 0 ? "text-emerald-600" : "text-rose-600"
-                    }`}
+                    key={stock.symbol}
+                    className="flex items-center justify-between rounded-2xl px-3 py-3 transition-colors hover:bg-muted/50"
                   >
-                    {stock.change >= 0 ? "+" : ""}
-                    {stock.change.toFixed(2)}%
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </SectionCard>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Heart className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{stock.symbol}</span>
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {stock.name}
+                      </div>
+                    </div>
 
-      <SectionCard title="Watchlists" contentClassName="min-h-0 flex-1 pt-0">
-        <ScrollArea className="h-full pr-3">
-          <div className="space-y-3">
-            {watchlists.map((watchlist) => (
-              <div
-                key={watchlist.name}
-                className="rounded-2xl border px-3 py-3"
-              >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-medium">{watchlist.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {watchlist.stocks.length} stocks
+                    <div className="text-right">
+                      <div className="text-sm font-medium">{stock.price}</div>
+                      <div
+                        className={`text-xs ${
+                          stock.change >= 0
+                            ? "text-emerald-600"
+                            : "text-rose-600"
+                        }`}
+                      >
+                        {stock.change >= 0 ? "+" : ""}
+                        {stock.change.toFixed(2)}%
+                      </div>
                     </div>
                   </div>
-
-                  <ChangeBadge value={watchlist.change} />
-                </div>
-
-                <WatchlistAvatarGroup stocks={watchlist.stocks} />
+                ))}
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </SectionCard>
+            </SidebarSection>
+          </ResizablePanel>
 
-      <SectionCard
-        title="Trending Users / Topics"
-        contentClassName="min-h-0 flex-1 pt-0"
-      >
-        <ScrollArea className="h-full pr-3">
-          <div className="space-y-3">
-            {trendingItems.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between rounded-2xl border px-3 py-3"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    {item.type === "Topic" ? (
-                      <Flame className="h-4 w-4 text-orange-500" />
-                    ) : (
-                      <Users className="h-4 w-4 text-sky-500" />
-                    )}
-                    <span className="truncate font-medium">{item.label}</span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {item.count}
-                  </div>
-                </div>
+          <ResizableHandle withHandle />
 
-                <Badge variant="outline" className="rounded-full">
-                  {item.type}
-                </Badge>
+          <ResizablePanel defaultSize="45%" minSize="25%">
+            <SidebarSection title="Watchlists">
+              <div className="space-y-2">
+                {watchlists.map((watchlist) => (
+                  <div
+                    key={watchlist.name}
+                    className="rounded-2xl border px-3 py-3"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-medium">{watchlist.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {watchlist.stocks.length} stocks
+                        </div>
+                      </div>
+
+                      <ChangeBadge value={watchlist.change} />
+                    </div>
+
+                    <WatchlistAvatarGroup stocks={watchlist.stocks} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </SectionCard>
-    </div>
+            </SidebarSection>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </CardContent>
+    </Card>
   );
 }

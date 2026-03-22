@@ -2,21 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
 import {
   BarChart3,
   LayoutDashboard,
   Star,
   Settings,
   Bell,
-  Search,
   LogOut,
   UserRound,
   CreditCard,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import {
   DropdownMenu,
@@ -27,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { logout } from "@/services/authActions";
+import { logout } from "@/lib/auth/authActions";
 import { ThemeToggle } from "@/components/ui/theme-button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -38,7 +35,9 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/providers/user-provider";
 import { parseFullName } from "@/lib/utils/parseName";
-import { usePathname } from "next/dist/client/components/navigation";
+import { usePathname } from "next/navigation";
+import { useHeader } from "@/providers/header-provider";
+import { ExpandableSearch } from "./components/expandable-search";
 
 const navItems = [
   { label: "Dashboard", href: "/platform", icon: LayoutDashboard },
@@ -49,6 +48,7 @@ const navItems = [
 
 export default function Header() {
   const { user } = useUser();
+  const { navbarRoutes } = useHeader();
   const pathname = usePathname();
   const { firstName, lastName } = parseFullName(user?.profile?.full_name);
 
@@ -85,19 +85,20 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            {navItems.map(({ label, href, icon: Icon }) => {
-              const isActive = pathname === href;
+            {navbarRoutes.map(({ label, href }) => {
+              const isActive =
+                pathname === href ||
+                (href === "/dashboard" && pathname === "/platform");
               return (
                 <Link
                   key={href}
-                  href={href}
+                  href={`/platform${href}`}
                   className={`flex items-center gap-2 text-sm transition ${
                     isActive
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
                   {label}
                 </Link>
               );
@@ -106,17 +107,7 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="relative hidden sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="
-                h-10 w-40 rounded-full border-border bg-background pl-9 pr-4
-                transition-all duration-300 ease-out
-                focus:w-72 focus:ring-2 focus:ring-ring/40
-              "
-            />
-          </div>
+          <ExpandableSearch />
 
           <ThemeToggle />
 

@@ -1,32 +1,30 @@
 "use client";
 
-import * as React from "react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import Header from "@/components/layout/platform/header";
 import Onboarding, { type OnboardingFormValues } from "./components/onboarding";
 import { useUser } from "@/providers/user-provider";
 import { toast } from "sonner";
-import { createProfile, getUserProfile } from "@/lib/data/me";
-import FadeContent from "@/components/fade-content";
 import { SidebarPanel } from "@/components/layout/platform/sidebar-panel";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { createProfile } from "@/lib/actions/me";
 
 type Props = {
   children: ReactNode;
 };
 
 const HEADER_OFFSET = 80;
+const MIN = 300;
+const MAX = 500;
+const DEFAULT = 380;
 
 export default function PlatformShell({ children }: Props) {
-  const { user, setUser, authUser } = useUser();
-  const [showOnboarding, setShowOnboarding] = React.useState(user === null);
-  const [isSaving, setIsSaving] = React.useState(false);
+  const { user, authUser, refreshUser } = useUser();
+  const [showOnboarding, setShowOnboarding] = useState(user === null);
+  const [isSaving, setIsSaving] = useState(false);
   const authUserObj = authUser?.user_metadata;
+  const [width, setWidth] = useState(DEFAULT);
+  const [dragging, setDragging] = useState(false);
 
   async function handleOnboardingSubmit(values: OnboardingFormValues) {
     try {
@@ -42,8 +40,7 @@ export default function PlatformShell({ children }: Props) {
             email_address: authUserObj?.email || "",
           });
 
-          const freshUser = await getUserProfile();
-          setUser(freshUser);
+          await refreshUser();
           setShowOnboarding(false);
         })(),
         {
@@ -60,60 +57,78 @@ export default function PlatformShell({ children }: Props) {
     }
   }
 
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar-width");
+    if (saved) setWidth(Number(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-width", width.toString());
+  }, [width]);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!dragging) return;
+
+      const next = window.innerWidth - e.clientX - 16;
+      const clamped = Math.max(MIN, Math.min(MAX, next));
+      setWidth(clamped);
+    }
+
+    function onUp() {
+      setDragging(false);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [dragging]);
+
   return (
-    <FadeContent blur={true} duration={3000} initialOpacity={0}>
-      <div className="min-h-screen bg-background px-11 text-foreground">
-        <Header />
+    <div className="min-h-screen bg-background px-11 text-foreground">
+      <Header />
 
-        <Onboarding
-          open={showOnboarding}
-          isSubmitting={isSaving}
-          onSubmit={handleOnboardingSubmit}
-        />
+      <Onboarding
+        open={showOnboarding}
+        isSubmitting={isSaving}
+        onSubmit={handleOnboardingSubmit}
+      />
 
-        <div className="mt-6">
-          <div className="hidden xl:block">
-            <ResizablePanelGroup
-              orientation="horizontal"
-              className="min-h-0 w-full gap-0"
-            >
-              <ResizablePanel defaultSize="70%">
-                <main className="pr-2">{children}</main>
-              </ResizablePanel>
+      <div className="mt-6 hidden xl:flex gap-6">
+        {/* Main Application Content */}
+        <main
+          className="min-w-0 flex-1"
+          style={{
+            width: `calc(100% - ${width}px - 1rem)`,
+          }}
+        >
+          {children}
+        </main>
 
-              <ResizableHandle />
+        {/* Right Panel Sidebar */}
+        <div className="relative shrink-0" style={{ width }}>
+          {/* Resizable Handle */}
+          <div
+            onMouseDown={() => setDragging(true)}
+            className="absolute left-0 top-0 h-full w-2 -translate-x-1/2 cursor-col-resize z-20"
+          />
 
-              <ResizablePanel
-                defaultSize="30%"
-                className="top-0 sticky max-h-30"
-              >
-                <aside
-                  className="sticky pl-2"
-                  style={{
-                    height: `calc(100vh - ${HEADER_OFFSET}px - 2.5rem)`,
-                  }}
-                >
-                  <SidebarPanel />
-                </aside>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </div>
+          {/* Sticky Sidebar */}
+          <aside
+            className="sticky self-start"
+            style={{
+              top: `${HEADER_OFFSET + 24}px`,
+              height: `calc(100vh - ${HEADER_OFFSET}px - 2.5rem)`,
+            }}
+          >
+            <SidebarPanel />
+          </aside>
         </div>
-        {/* <div className="mt-6">
-          <div className="hidden xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-6">
-            <main className="min-w-0">{children}</main>
-
-            <aside
-              className="sticky self-start top-26"
-              style={{
-                height: `calc(100vh - ${HEADER_OFFSET}px - 2.5rem)`,
-              }}
-            >
-              <SidebarPanel />
-            </aside>
-          </div>
-        </div> */}
       </div>
-    </FadeContent>
+    </div>
   );
 }
