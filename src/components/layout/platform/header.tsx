@@ -169,7 +169,7 @@ export default function Header() {
                       {firstName} {lastName}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {user?.profile?.email_address}
+                      @{user?.profile?.username}
                     </span>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function Header() {
               <DropdownMenuGroup className="flex flex-col gap-1.5">
                 <DropdownMenuItem asChild>
                   <Link
-                    href={`/trader/${user?.profile.username}`}
+                    href={`/platform/trader/${user?.profile.username}`}
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <UserRound className="h-4 w-4" />

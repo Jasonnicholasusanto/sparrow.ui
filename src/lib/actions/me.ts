@@ -1,6 +1,6 @@
 "use server";
 
-import { UserResponse } from "@/schemas/user";
+import { UpdateUserProfilePayload, UserResponse } from "@/schemas/user";
 import { Endpoints } from "@/lib/api/endpoints";
 import { serverApiClient } from "@/lib/api/server";
 
@@ -10,6 +10,7 @@ export async function createProfile(data: {
   username: string;
   phone_number: string;
   email_address: string;
+  location: string;
 }) {
   return serverApiClient<UserResponse>(
     `${Endpoints.Me.Base}${Endpoints.Me.Profile}`,
@@ -28,22 +29,22 @@ export async function softDeleteProfile() {
   });
 }
 
-// export async function updateProfile(data: UpdateUserProfilePayload) {
-//   const filteredData = Object.fromEntries(
-//     Object.entries(data).filter((entry) => {
-//       const [, v] = entry;
-//       return v != null && v !== "";
-//     }),
-//   );
-//   return apiClient<UserResponse>(
-//     `${Endpoints.Me.Base}${Endpoints.Me.Profile}`,
-//     {
-//       method: "PATCH",
-//       body: JSON.stringify(filteredData),
-//       version: Endpoints.Me.BaseVersion,
-//     },
-//   );
-// }
+export async function updateProfile(data: UpdateUserProfilePayload) {
+  const filteredData = Object.fromEntries(
+    Object.entries(data).filter((entry) => {
+      const [, v] = entry;
+      return v != null && v !== "";
+    }),
+  );
+  return serverApiClient<UserResponse>(
+    `${Endpoints.Me.Base}${Endpoints.Me.Profile}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(filteredData),
+      version: Endpoints.Me.BaseVersion,
+    },
+  );
+}
 
 export async function updateEmail(data: { email_address: string }) {
   return serverApiClient<UserResponse>(

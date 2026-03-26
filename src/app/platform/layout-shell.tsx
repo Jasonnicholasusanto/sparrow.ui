@@ -38,6 +38,7 @@ export default function PlatformShell({ children }: Props) {
             birth_date: values.dateOfBirth.toISOString().split("T")[0],
             phone_number: values.phoneNumber,
             email_address: authUserObj?.email || "",
+            location: values.location,
           });
 
           await refreshUser();

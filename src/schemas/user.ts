@@ -1,3 +1,5 @@
+import { WatchlistSummary } from "./watchlist";
+
 export interface UserProfile {
   id: string;
   auth_id: string;
@@ -10,15 +12,18 @@ export interface UserProfile {
   profile_picture: string | null;
   background_picture: string | null;
   email_address: string;
+  location: string | null;
+  created_at: string;
 }
 
 export interface UpdateUserProfilePayload {
-  username?: string;
-  full_name?: string;
+  username: string;
+  full_name: string;
   display_name?: string;
   bio?: string;
   birth_date?: string;
   phone_number?: string;
+  location?: string;
 }
 
 export interface UserActivity {
@@ -43,6 +48,7 @@ export interface UserResponse {
   activity: UserActivity;
   followers_count: number;
   following_count: number;
+  watchlists: WatchlistSummary;
 }
 
 export class User {
@@ -50,17 +56,20 @@ export class User {
   activity: UserActivity;
   followers_count: number;
   following_count: number;
+  watchlists: WatchlistSummary;
 
   constructor(
     profile: UserProfile,
     activity: UserActivity,
     followers_count: number,
     following_count: number,
+    watchlists: WatchlistSummary,
   ) {
     this.profile = profile;
     this.activity = activity;
     this.followers_count = followers_count;
     this.following_count = following_count;
+    this.watchlists = watchlists;
   }
 
   static fromJSON(json: UserResponse): User {
@@ -69,6 +78,7 @@ export class User {
       json.activity,
       json.followers_count,
       json.following_count,
+      json.watchlists,
     );
   }
 
@@ -89,5 +99,9 @@ export class User {
 
   get avatar(): string | null {
     return this.profile.profile_picture;
+  }
+
+  get userWatchlists(): WatchlistSummary {
+    return this.watchlists;
   }
 }

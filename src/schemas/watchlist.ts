@@ -10,6 +10,16 @@ export interface WatchlistOut {
   forked_from_id?: string | null;
 }
 
+export interface WatchlistDetailOut {
+  watchlist: WatchlistOut;
+  items: WatchlistItemBase[];
+}
+
+export interface WatchlistSummary {
+  total: number;
+  watchlists: WatchlistDetailOut[];
+}
+
 export interface UserWatchlistCounts {
   owned: number;
   forked: number;
@@ -18,10 +28,10 @@ export interface UserWatchlistCounts {
 }
 
 export interface UserWatchlistGroups {
-  created: WatchlistOut[];
-  forked: WatchlistOut[];
-  shared: WatchlistOut[];
-  bookmarked: WatchlistOut[];
+  created: WatchlistDetailOut[];
+  forked: WatchlistDetailOut[];
+  shared: WatchlistDetailOut[];
+  bookmarked: WatchlistDetailOut[];
 
   total_count: number;
 

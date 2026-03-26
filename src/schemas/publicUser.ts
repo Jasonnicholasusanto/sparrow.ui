@@ -1,3 +1,5 @@
+import { WatchlistSummary } from "./watchlist";
+
 export interface UserProfile {
   id: string;
   auth_id: string;
@@ -7,6 +9,8 @@ export interface UserProfile {
   bio: string | null;
   profile_picture: string | null;
   background_picture: string | null;
+  location: string | null;
+  created_at: string;
 }
 
 export interface UserActivityPointsBreakdown {
@@ -20,6 +24,7 @@ export interface UserPublicResponse {
   activityPointsBreakdown: UserActivityPointsBreakdown;
   followers_count: number;
   following_count: number;
+  watchlists: WatchlistSummary;
 }
 
 export class PublicUser {

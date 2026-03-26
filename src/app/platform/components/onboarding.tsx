@@ -2,7 +2,14 @@
 
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, AtSign, UserRound, Phone } from "lucide-react";
+import {
+  CalendarIcon,
+  Loader2,
+  AtSign,
+  UserRound,
+  Phone,
+  MapPin,
+} from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -36,6 +43,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { countries } from "countries-list";
+
+const countriesList = Object.entries(countries)
+  .map(([code, country]) => ({
+    code,
+    name: country.name,
+    native: country.native,
+    phone: country.phone,
+    continent: country.continent,
+    capital: country.capital,
+    currency: country.currency,
+    languages: country.languages,
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 const onboardingSchema = z
   .object({
@@ -57,6 +85,7 @@ const onboardingSchema = z
         "Username can only contain letters, numbers, dots, and underscores",
       ),
     phoneNumber: z.string().trim().min(1, "Phone number is required"),
+    location: z.string().trim().min(1, "Location is required"),
   })
   .refine(
     (data) => {
@@ -98,6 +127,7 @@ export default function Onboarding({
       fullName: defaultValues?.fullName ?? "",
       username: defaultValues?.username ?? "",
       phoneNumber: defaultValues?.phoneNumber ?? "",
+      location: defaultValues?.location ?? "",
       dateOfBirth: defaultValues?.dateOfBirth,
     },
   });
@@ -133,7 +163,9 @@ export default function Onboarding({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="fullName">Full name</FieldLabel>
+                  <FieldLabel htmlFor="fullName">
+                    Full name <span className="text-red-500">*</span>
+                  </FieldLabel>
 
                   <InputGroup>
                     <InputGroupInput
@@ -272,6 +304,44 @@ export default function Onboarding({
 
                   {errors.phoneNumber?.message && (
                     <FieldError>{errors.phoneNumber.message}</FieldError>
+                  )}
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="location">Country</FieldLabel>
+
+                  <Controller
+                    control={control}
+                    name="location"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger id="location" className="w-full">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <SelectValue placeholder="Select your country" />
+                          </div>
+                        </SelectTrigger>
+
+                        <SelectContent className="max-h-72">
+                          {countriesList.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+
+                  <FieldDescription>
+                    Select the country you currently live in.
+                  </FieldDescription>
+
+                  {errors.location?.message && (
+                    <FieldError>{errors.location.message}</FieldError>
                   )}
                 </Field>
               </FieldGroup>

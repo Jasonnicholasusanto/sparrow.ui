@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, TrendingUp } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { QuoteResult } from "@/schemas/search";
