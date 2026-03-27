@@ -38,6 +38,7 @@ import { parseFullName } from "@/lib/utils/parseName";
 import { usePathname } from "next/navigation";
 import { useHeader } from "@/providers/header-provider";
 import { ExpandableSearch } from "./components/expandable-search";
+import { CreateWatchlistDialog } from "@/components/create-watchlist/create-watchlist-dialog";
 
 const navItems = [
   { label: "Dashboard", href: "/platform", icon: LayoutDashboard },
@@ -106,16 +107,18 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row items-center gap-4">
           <ExpandableSearch />
 
           <ThemeToggle />
+
+          <CreateWatchlistDialog isIconOnly={true} />
 
           <Button size="icon" variant="ghost">
             <Bell className="h-5 w-5" />
           </Button>
 
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 self-center!" />
 
           <DropdownMenu>
             <Tooltip>
@@ -131,7 +134,7 @@ export default function Header() {
                         focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
                       "
                   >
-                    <Avatar className="h-8 w-8 rounded-full">
+                    <Avatar className="h-10 w-10 rounded-full">
                       <AvatarImage
                         src={user?.profile?.profile_picture ?? ""}
                         alt={user?.profile?.full_name ?? ""}
@@ -144,7 +147,7 @@ export default function Header() {
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Profile</TooltipContent>
+              <TooltipContent>Account settings and more</TooltipContent>
             </Tooltip>
             <DropdownMenuContent
               className="flex flex-col w-auto min-w-65 rounded-lg py-3 px-4 gap-1.5"
@@ -154,7 +157,7 @@ export default function Header() {
             >
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-8 w-8 rounded-lg">
+                  <Avatar className="h-10 w-10 rounded-lg">
                     <AvatarImage
                       src={user?.profile?.profile_picture ?? ""}
                       alt={user?.profile?.full_name ?? ""}

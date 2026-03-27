@@ -67,6 +67,17 @@ export const Endpoints = {
           interval,
         )}&period=${encodeURIComponent(period)}`,
     },
+    Screener: {
+      BaseVersion: "v1",
+      Base: "/screen",
+      Curated: (assetType: "equity" | "fund", limit = 25) =>
+        `/curated?asset_type=${assetType}&limit=${limit}`,
+      PredefinedQueries: "/predefined-queries",
+      EquityValidInputs: "/equity-valid-inputs",
+      FundValidInputs: "/fund-valid-inputs",
+      PredefinedQueryResults: (category: string, limit = 25) =>
+        `/predefined-queries-result/${category}?limit=${limit}`,
+    },
   },
   SearchHistory: {
     BaseVersion: "v1",

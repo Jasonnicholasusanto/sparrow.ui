@@ -47,6 +47,7 @@ export default function TraderProfileHeader({
             src={bannerUrl}
             alt={`${userProfile?.username} banner`}
             fill
+            sizes="(max-width: 768px) 100vw, 768px"
             priority
             className="object-cover"
           />
@@ -80,6 +81,7 @@ export default function TraderProfileHeader({
                   alt={`${userProfile?.username} profile photo`}
                   fill
                   className="rounded-full object-cover"
+                  sizes="(max-width: 768px) 100vw, 768px"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-muted text-3xl font-semibold text-muted-foreground">
@@ -177,8 +179,7 @@ export default function TraderProfileHeader({
         </div>
 
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-          {userProfile?.bio ??
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."}
+          {userProfile?.bio}
         </p>
       </div>
     </section>

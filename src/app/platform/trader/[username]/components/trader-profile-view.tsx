@@ -3,9 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { TraderProfileTabs } from "./trader-profile-tabs";
-import { TraderProfileEmptyState } from "./trader-profile-empty-state";
-import { TraderProfileBio } from "./trader-profile-bio";
-import { TraderProfileStats } from "./trader-profile-stats";
 import TraderProfileHeader from "./trader-profile-header";
 import CropProfileImageComponent from "./crop-profile-photo-component";
 import { UserPublicResponse } from "@/schemas/publicUser";
@@ -20,6 +17,9 @@ import {
   uploadProfilePicture,
 } from "@/lib/actions/me";
 import EditProfileDialog from "./edit-profile-dialog";
+import ProfilePhotoDialog from "./profile-photo-dialog";
+import CropBannerImageComponent from "./crop-banner-photo-component";
+import BannerPhotoDialog from "./banner-photo-dialog";
 
 export function TraderProfileView({
   username,
@@ -43,8 +43,8 @@ export function TraderProfileView({
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
     profileData?.profile_picture || undefined,
   );
-  const [bannerUrl, setBannerUrl] = useState<string | null>(
-    profileData?.background_picture || null,
+  const [bannerUrl, setBannerUrl] = useState<string | undefined>(
+    profileData?.background_picture || undefined,
   );
 
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function TraderProfileView({
 
   useEffect(() => {
     setAvatarUrl(profileData?.profile_picture || undefined);
-    setBannerUrl(profileData?.background_picture || null);
+    setBannerUrl(profileData?.background_picture || undefined);
   }, [profileData]);
 
   async function refreshCurrentUser() {
@@ -131,7 +131,7 @@ export function TraderProfileView({
         setBannerLoading(true);
         await deleteBannerImage();
         await refreshCurrentUser();
-        setBannerUrl(null);
+        setBannerUrl(undefined);
       } catch (err) {
         console.error("Failed removing banner image", err);
         throw err;
@@ -258,27 +258,7 @@ export function TraderProfileView({
         onOpenBannerDialog={openBannerDialog}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="space-y-6">
-          <TraderProfileTabs isOwnProfile={isOwner} />
-
-          <div className="rounded-2xl border bg-card p-6 shadow-sm">
-            <TraderProfileEmptyState
-              title="Posts and activity coming soon"
-              description={
-                isOwner
-                  ? "This is where your posts, analysis, comments, and activity feed will appear."
-                  : `This is where ${profileData.display_name || profileData.username}'s posts, analysis, comments, and activity feed will appear.`
-              }
-            />
-          </div>
-        </section>
-
-        <aside className="space-y-6">
-          <TraderProfileStats profile={profile} />
-          <TraderProfileBio profile={profileData} />
-        </aside>
-      </div>
+      <TraderProfileTabs isOwnProfile={isOwner} />
 
       <EditProfileDialog
         open={editProfileOpen}
@@ -286,7 +266,7 @@ export function TraderProfileView({
         onSave={handleSaveProfile}
       />
 
-      {/* <ProfilePhotoDialog
+      <ProfilePhotoDialog
         open={photoDialogOpen}
         onClose={() => setPhotoDialogOpen(false)}
         avatarUrl={avatarUrl}
@@ -295,20 +275,18 @@ export function TraderProfileView({
           profileInputRef.current?.click();
         }}
         onRemove={handleAvatarRemove}
-        loading={profileLoading}
-      /> */}
+      />
 
-      {/* <ProfilePhotoDialog
+      <BannerPhotoDialog
         open={bannerDialogOpen}
         onClose={() => setBannerDialogOpen(false)}
-        avatarUrl={bannerUrl}
+        bannerUrl={bannerUrl || undefined}
         onUploadClick={() => {
           setBannerDialogOpen(false);
           bannerInputRef.current?.click();
         }}
         onRemove={handleBannerRemove}
-        loading={bannerLoading}
-      /> */}
+      />
 
       {cropSrc ? (
         <CropProfileImageComponent
@@ -323,7 +301,7 @@ export function TraderProfileView({
       ) : null}
 
       {bannerCropSrc ? (
-        <CropProfileImageComponent
+        <CropBannerImageComponent
           open={bannerCropOpen}
           onClose={() => {
             setBannerCropOpen(false);

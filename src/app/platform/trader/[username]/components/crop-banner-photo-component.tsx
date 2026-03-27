@@ -33,7 +33,7 @@ function rotateSize(width: number, height: number, rotation: number) {
 async function getCroppedImage(
   imageSrc: string,
   pixelCrop: any,
-  rotation = 0
+  rotation = 0,
 ): Promise<Blob> {
   const img = await createImage(imageSrc);
 
@@ -63,7 +63,7 @@ async function getCroppedImage(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height
+    pixelCrop.height,
   );
 
   return new Promise((resolve, reject) => {
@@ -74,7 +74,7 @@ async function getCroppedImage(
   });
 }
 
-export default function BannerCropperComponent({
+export default function CropBannerImageComponent({
   open,
   onClose,
   src,
@@ -107,7 +107,7 @@ export default function BannerCropperComponent({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="min-w-2xl max-w-3xl">
         <DialogTitle className="font-extrabold">Edit Banner</DialogTitle>
         <DialogDescription className="hidden"></DialogDescription>
 
@@ -117,7 +117,7 @@ export default function BannerCropperComponent({
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={6 / 0.7}
+            aspect={3 / 0.8}
             cropShape="rect"
             showGrid={false}
             onCropChange={setCrop}
