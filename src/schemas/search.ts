@@ -6,12 +6,23 @@ export interface QuoteResult {
   index?: string;
   exchange?: string;
   exchDisp?: string;
-  quoteType?: string;
   typeDisp?: string;
-  sector?: string;
   sectorDisp?: string;
-  industry?: string;
   industryDisp?: string;
+  currency?: string;
+  lastPrice?: number;
+  open?: number;
+  dayHigh?: number;
+  dayLow?: number;
+  previousClose?: number;
+  regularMarketPreviousClose?: number;
+  lastVolume?: number;
+  yearChange?: number;
+  yearHigh?: number;
+  yearLow?: number;
+  timezone?: string;
+  regularMarketChange?: number;
+  regularMarketChangePercent?: number;
 }
 
 export interface SearchQuotesResponse {

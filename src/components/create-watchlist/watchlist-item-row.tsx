@@ -1,25 +1,16 @@
 "use client";
 
-import Image from "next/image";
-import { Plus, Check, TrendingUp, TrendingDown } from "lucide-react";
+import { Check, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-export type WatchlistSeedItem = {
-  symbol: string;
-  name: string;
-  exchange?: string | null;
-  quoteType?: string | null;
-  price?: number | null;
-  changePercent?: number | null;
-  currency?: string | null;
-  logoUrl?: string | null;
-};
+import { ScreenerTickerInfo } from "@/schemas/screener";
+import { environment } from "@/lib/utils/env";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 type WatchlistItemRowProps = {
-  item: WatchlistSeedItem;
+  item: ScreenerTickerInfo;
   selected: boolean;
-  onToggle: (item: WatchlistSeedItem) => void;
+  onToggle: (item: ScreenerTickerInfo) => void;
 };
 
 export function WatchlistItemRow({
@@ -27,7 +18,24 @@ export function WatchlistItemRow({
   selected,
   onToggle,
 }: WatchlistItemRowProps) {
-  const isPositive = (item.changePercent ?? 0) >= 0;
+  const isPositive = (item.regularMarketChange ?? 0) >= 0;
+
+  const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
+
+  const displayName = item.displayName || item.longName || item.symbol;
+
+  function getChangePercent(item: ScreenerTickerInfo): number | null {
+    const change = item.regularMarketChange;
+    const prevClose = item.regularMarketPreviousClose;
+
+    if (change == null || prevClose == null || prevClose === 0) {
+      return null;
+    }
+
+    return (change / prevClose) * 100;
+  }
+
+  const regularMarketChangePercent = getChangePercent(item);
 
   return (
     <div
@@ -38,24 +46,22 @@ export function WatchlistItemRow({
     >
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-background">
-          {item.logoUrl ? (
-            <Image
-              src={item.logoUrl}
-              alt={item.symbol}
-              width={44}
-              height={44}
-              className="h-full w-full object-cover"
+          <Avatar className="h-8 w-8">
+            <AvatarImage
+              src={logoUrl}
+              alt={`${displayName} logo`}
+              className="object-cover"
             />
-          ) : (
-            <span className="text-xs font-semibold text-muted-foreground">
-              {item.symbol.slice(0, 2)}
-            </span>
-          )}
+            <AvatarFallback className="text-xs font-medium">
+              {item.symbol?.charAt(0).toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="truncate font-medium">{item.symbol}</p>
+
             {item.exchange ? (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                 {item.exchange}
@@ -63,16 +69,29 @@ export function WatchlistItemRow({
             ) : null}
           </div>
 
-          <p className="truncate text-sm text-muted-foreground">{item.name}</p>
+          <p className="truncate text-sm text-muted-foreground">
+            {displayName}
+          </p>
 
           <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-            {typeof item.price === "number" ? (
+            {typeof item.regularMarketPrice === "number" ? (
               <span>
-                {item.currency ?? "USD"} {item.price.toFixed(2)}
+                {item.currency ?? "USD"} {item.regularMarketPrice.toFixed(2)}
               </span>
             ) : null}
 
-            {typeof item.changePercent === "number" ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1",
+                isPositive ? "text-emerald-600" : "text-red-600",
+              )}
+            >
+              {item.regularMarketChange != null
+                ? (isPositive ? "+" : "") + item.regularMarketChange.toFixed(2)
+                : null}
+            </span>
+
+            {typeof regularMarketChangePercent === "number" ? (
               <span
                 className={cn(
                   "inline-flex items-center gap-1",
@@ -84,7 +103,7 @@ export function WatchlistItemRow({
                 ) : (
                   <TrendingDown className="h-3.5 w-3.5" />
                 )}
-                {item.changePercent.toFixed(2)}%
+                {regularMarketChangePercent.toFixed(2)}%
               </span>
             ) : null}
           </div>

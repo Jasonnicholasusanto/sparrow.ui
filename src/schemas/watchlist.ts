@@ -48,6 +48,7 @@ export interface WatchlistDataCreate {
   name: string;
   description?: string | null;
   visibility: string;
+  allocation_type: string;
   is_default: boolean;
 }
 

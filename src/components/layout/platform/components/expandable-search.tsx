@@ -172,14 +172,14 @@ export function ExpandableSearch() {
         onFocus={() => setOpen(true)}
         placeholder="Search stocks..."
         className="
-          h-10 w-40 rounded-full border-border bg-background pl-9 pr-4
+          h-10 w-56 rounded-full border-border bg-background pl-9 pr-4
           transition-all duration-300 ease-out
-          focus:w-72 focus:ring-2 focus:ring-ring/40
+          focus:w-sm focus:ring-2 focus:ring-ring/40
         "
       />
 
       {open ? (
-        <div className="absolute top-12 z-50 w-72 overflow-hidden rounded-2xl border bg-popover shadow-lg">
+        <div className="absolute top-13 z-50 w-sm overflow-hidden rounded-2xl border bg-popover shadow-lg">
           <div className="max-h-96 overflow-y-auto p-2">
             {showHistory ? (
               <SearchHistory

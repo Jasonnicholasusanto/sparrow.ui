@@ -8,22 +8,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <FadeContent blur={true} duration={3000} initialOpacity={0}>
-        <div className="fixed inset-0 -z-10 pointer-events-auto min-h-screen">
-          <Dither
-            waveColor={[0.02, 0.71, 0.83]}
-            disableAnimation={false}
-            enableMouseInteraction
-            mouseRadius={0.1}
-            colorNum={10}
-            waveAmplitude={0.25}
-            waveFrequency={2}
-            waveSpeed={0.05}
-          />
-        </div>
-        {children}
-      </FadeContent>
-    </div>
+    <FadeContent blur={true} duration={3000} initialOpacity={0}>
+      <div className="fixed inset-0 -z-10 pointer-events-auto min-h-screen">
+        <Dither
+          waveColor={[0.02, 0.71, 0.83]}
+          disableAnimation={false}
+          enableMouseInteraction
+          mouseRadius={0.1}
+          colorNum={10}
+          waveAmplitude={0.25}
+          waveFrequency={2}
+          waveSpeed={0.05}
+        />
+      </div>
+      {children}
+    </FadeContent>
   );
 }

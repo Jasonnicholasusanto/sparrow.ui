@@ -37,7 +37,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-import { WatchlistItemRow, type WatchlistSeedItem } from "./watchlist-item-row";
+import { WatchlistItemRow } from "./watchlist-item-row";
+import {
+  createWatchlistClient,
+  getWatchlistQuantityTypesClient,
+  getWatchlistTypesClient,
+} from "@/lib/data/client/watchlist";
+import { fetchCuratedScreensClient } from "@/lib/data/client/screener";
+import { WatchlistDetailCreateRequest } from "@/schemas/watchlist";
+import { ScreenerTickerInfo } from "@/schemas/screener";
+import { SearchQuotesResponse } from "@/schemas/search";
+import { searchQuotesClient } from "@/lib/data/client/search";
 
 const createWatchlistSchema = z.object({
   name: z.string().min(1, "Watchlist name is required"),
@@ -49,16 +59,20 @@ const createWatchlistSchema = z.object({
   seedItems: z.array(
     z.object({
       symbol: z.string(),
-      name: z.string(),
+      displayName: z.string().nullable().optional(),
+      longName: z.string().nullable().optional(),
       exchange: z.string().nullable().optional(),
-      quoteType: z.string().nullable().optional(),
-      price: z.number().nullable().optional(),
-      changePercent: z.number().nullable().optional(),
       currency: z.string().nullable().optional(),
-      logoUrl: z.string().nullable().optional(),
+      regularMarketPrice: z.number().nullable().optional(),
+      regularMarketPreviousClose: z.number().nullable().optional(),
+      regularMarketChange: z.number().nullable().optional(),
     }),
   ),
 });
+
+type SeedItemFormValue = z.infer<
+  typeof createWatchlistSchema
+>["seedItems"][number];
 
 type CreateWatchlistFormValues = z.infer<typeof createWatchlistSchema>;
 
@@ -66,14 +80,19 @@ type CreateWatchlistDialogProps = {
   isIconOnly?: boolean;
 };
 
-type MetaResponse = {
-  visibilityTypes: string[];
-  quantityTypes: string[];
-};
+function useDebouncedValue<T>(value: T, delay = 400): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
-type CuratedResponse = {
-  items: WatchlistSeedItem[];
-};
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export function CreateWatchlistDialog({
   isIconOnly = false,
@@ -84,9 +103,12 @@ export function CreateWatchlistDialog({
   const [visibilityTypes, setVisibilityTypes] = useState<string[]>([]);
   const [quantityTypes, setQuantityTypes] = useState<string[]>([]);
   const [curatedLoading, setCuratedLoading] = useState(false);
-  const [curatedItems, setCuratedItems] = useState<WatchlistSeedItem[]>([]);
+  const [curatedItems, setCuratedItems] = useState<ScreenerTickerInfo[]>([]);
   const [search, setSearch] = useState("");
   const [isSubmitting, startSubmitting] = useTransition();
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<ScreenerTickerInfo[]>([]);
+  const debouncedSearch = useDebouncedValue(search, 500);
 
   const form = useForm<CreateWatchlistFormValues>({
     resolver: zodResolver(createWatchlistSchema),
@@ -103,6 +125,7 @@ export function CreateWatchlistDialog({
 
   const assetType = form.watch("assetType");
   const selectedSeedItems = form.watch("seedItems");
+  const quantityType = form.watch("quantityType");
 
   useEffect(() => {
     if (!open) return;
@@ -111,31 +134,28 @@ export function CreateWatchlistDialog({
       try {
         setMetaLoading(true);
 
-        const res = await fetch("/api/watchlists/meta", {
-          method: "GET",
-          cache: "no-store",
-        });
+        const [visibilityRes, quantityRes] = await Promise.all([
+          getWatchlistTypesClient(),
+          getWatchlistQuantityTypesClient(),
+        ]);
 
-        if (!res.ok) {
-          throw new Error("Failed to load watchlist options.");
-        }
+        const nextVisibilityTypes = visibilityRes ?? [];
+        const nextQuantityTypes = quantityRes ?? [];
 
-        const data: MetaResponse = await res.json();
-
-        setVisibilityTypes(data.visibilityTypes ?? []);
-        setQuantityTypes(data.quantityTypes ?? []);
+        setVisibilityTypes(nextVisibilityTypes);
+        setQuantityTypes(nextQuantityTypes);
 
         const currentVisibility = form.getValues("visibility");
         const currentQuantityType = form.getValues("quantityType");
 
-        if (!currentVisibility && data.visibilityTypes?.length) {
-          form.setValue("visibility", data.visibilityTypes[0], {
+        if (!currentVisibility && nextVisibilityTypes.length > 0) {
+          form.setValue("visibility", nextVisibilityTypes[0], {
             shouldValidate: true,
           });
         }
 
-        if (!currentQuantityType && data.quantityTypes?.length) {
-          form.setValue("quantityType", data.quantityTypes[0], {
+        if (!currentQuantityType && nextQuantityTypes.length > 0) {
+          form.setValue("quantityType", nextQuantityTypes[0], {
             shouldValidate: true,
           });
         }
@@ -152,49 +172,61 @@ export function CreateWatchlistDialog({
   useEffect(() => {
     if (!open || step !== 2) return;
 
-    const loadCurated = async () => {
+    const query = debouncedSearch.trim();
+
+    if (!query) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const runSearch = async () => {
       try {
-        setCuratedLoading(true);
+        setSearchLoading(true);
 
-        const res = await fetch(
-          `/api/yfinance/screener/curated?assetType=${assetType}&limit=25`,
-          {
-            method: "GET",
-            cache: "no-store",
-          },
-        );
+        const res: SearchQuotesResponse = await searchQuotesClient(query, {
+          maxResult: 8,
+          recommended: 8,
+          enableFuzzyQuery: true,
+        });
 
-        if (!res.ok) {
-          throw new Error("Failed to load curated screen.");
-        }
+        if (cancelled) return;
 
-        const data: CuratedResponse = await res.json();
-        setCuratedItems(data.items ?? []);
+        const nextResults = Array.isArray(res?.results)
+          ? res.results
+          : Array.isArray((res as any)?.quotes)
+            ? (res as any).quotes
+            : Array.isArray((res as any)?.items)
+              ? (res as any).items
+              : [];
+
+        setSearchResults(nextResults);
       } catch (error) {
-        console.error(error);
-        setCuratedItems([]);
+        if (!cancelled) {
+          console.error(error);
+          setSearchResults([]);
+        }
       } finally {
-        setCuratedLoading(false);
+        if (!cancelled) {
+          setSearchLoading(false);
+        }
       }
     };
 
-    loadCurated();
-  }, [open, step, assetType]);
+    void runSearch();
 
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return curatedItems;
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, open, step]);
 
-    return curatedItems.filter((item) => {
-      return (
-        item.symbol.toLowerCase().includes(q) ||
-        item.name.toLowerCase().includes(q) ||
-        item.exchange?.toLowerCase().includes(q)
-      );
-    });
-  }, [curatedItems, search]);
+  const displayItems = useMemo(() => {
+    return debouncedSearch.trim() ? searchResults : curatedItems;
+  }, [debouncedSearch, searchResults, curatedItems]);
 
-  function handleToggleSeedItem(item: WatchlistSeedItem) {
+  function handleToggleSeedItem(item: ScreenerTickerInfo) {
     const current = form.getValues("seedItems");
     const exists = current.some((x) => x.symbol === item.symbol);
 
@@ -207,7 +239,18 @@ export function CreateWatchlistDialog({
       return;
     }
 
-    form.setValue("seedItems", [...current, item], {
+    const nextItem: SeedItemFormValue = {
+      symbol: item.symbol,
+      displayName: item.displayName ?? null,
+      longName: item.longName ?? null,
+      exchange: item.exchange ?? null,
+      currency: item.currency ?? null,
+      regularMarketPrice: item.regularMarketPrice ?? null,
+      regularMarketPreviousClose: item.regularMarketPreviousClose ?? null,
+      regularMarketChange: item.regularMarketChange ?? null,
+    };
+
+    form.setValue("seedItems", [...current, nextItem], {
       shouldDirty: true,
       shouldValidate: true,
     });
@@ -223,7 +266,10 @@ export function CreateWatchlistDialog({
     ]);
 
     if (!valid) return;
+
+    const selectedAssetType = form.getValues("assetType");
     setStep(2);
+    await handleCategoryChange(selectedAssetType);
   }
 
   function handleBack() {
@@ -237,6 +283,8 @@ export function CreateWatchlistDialog({
       setTimeout(() => {
         setStep(1);
         setSearch("");
+        setSearchResults([]);
+        setSearchLoading(false);
         setCuratedItems([]);
         form.reset({
           name: "",
@@ -254,23 +302,60 @@ export function CreateWatchlistDialog({
   async function onSubmit(values: CreateWatchlistFormValues) {
     startSubmitting(async () => {
       try {
-        const res = await fetch("/api/watchlists", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        const allocationType = values.quantityType;
+
+        const payload: WatchlistDetailCreateRequest = {
+          watchlist_data: {
+            name: values.name.trim(),
+            description: values.description?.trim() || "",
+            visibility: values.visibility,
+            allocation_type: allocationType,
+            is_default: values.isDefault,
           },
-          body: JSON.stringify(values),
-        });
+          items:
+            values.seedItems.length > 0
+              ? values.seedItems.map((item, index) => ({
+                  symbol: item.symbol,
+                  exchange: item.exchange ?? "",
+                  note: "",
+                  position: index,
+                  purchase_price: item.regularMarketPrice ?? 0,
+                  percentage:
+                    allocationType === "percentage"
+                      ? Number((100 / values.seedItems.length).toFixed(2))
+                      : 0,
+                  quantity: allocationType === "quantity" ? 1 : 0,
+                }))
+              : [],
+        };
 
-        if (!res.ok) {
-          throw new Error("Failed to create watchlist.");
-        }
-
+        await createWatchlistClient(payload);
         setOpen(false);
       } catch (error) {
         console.error(error);
       }
     });
+  }
+
+  async function handleCategoryChange(category: "equity" | "fund") {
+    try {
+      setCuratedLoading(true);
+
+      form.setValue("assetType", category, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      const data = await fetchCuratedScreensClient(category, 25);
+      console.log("Raw curated data:", data);
+
+      setCuratedItems(Array.isArray(data?.results) ? data.results : []);
+    } catch (error) {
+      console.error(error);
+      setCuratedItems([]);
+    } finally {
+      setCuratedLoading(false);
+    }
   }
 
   return (
@@ -287,24 +372,15 @@ export function CreateWatchlistDialog({
         )}
       </DialogTrigger>
 
-      <DialogContent className="min-w-3xl max-w-5xl p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <div className="flex items-center justify-between gap-4">
+      <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
+        <DialogHeader>
+          <div className="flex flex-col gap-4">
             <div>
               <DialogTitle>Create watchlist</DialogTitle>
               <DialogDescription>
                 Build your watchlist first, then optionally seed it with curated
                 stocks or funds.
               </DialogDescription>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Badge variant={step === 1 ? "default" : "secondary"}>
-                Step 1 · Details
-              </Badge>
-              <Badge variant={step === 2 ? "default" : "secondary"}>
-                Step 2 · Seed items
-              </Badge>
             </div>
           </div>
         </DialogHeader>
@@ -313,7 +389,7 @@ export function CreateWatchlistDialog({
 
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {step === 1 ? (
-            <div className="grid gap-5 px-6 py-5">
+            <div className="grid gap-5 pb-5">
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="name">
@@ -475,8 +551,8 @@ export function CreateWatchlistDialog({
                     />
                   </div>
 
-                  <Field className="w-[160px]">
-                    <FieldLabel htmlFor="assetType">Asset type</FieldLabel>
+                  <Field className="w-40">
+                    {/* <FieldLabel htmlFor="assetType">Asset type</FieldLabel> */}
 
                     <Controller
                       control={form.control}
@@ -484,7 +560,9 @@ export function CreateWatchlistDialog({
                       render={({ field }) => (
                         <Select
                           value={field.value}
-                          onValueChange={field.onChange}
+                          onValueChange={(value: "equity" | "fund") => {
+                            void handleCategoryChange(value);
+                          }}
                         >
                           <SelectTrigger id="assetType" className="w-full">
                             <SelectValue placeholder="Asset type" />
@@ -511,6 +589,11 @@ export function CreateWatchlistDialog({
                 </div>
               </div>
 
+              {/* <div className="mb-2 text-sm text-muted-foreground">
+                Allocation type:{" "}
+                <span className="font-medium">{quantityType}</span>
+              </div> */}
+
               <div className="mb-4 flex flex-wrap gap-2">
                 {selectedSeedItems.map((item) => (
                   <Badge key={item.symbol} variant="secondary">
@@ -519,20 +602,20 @@ export function CreateWatchlistDialog({
                 ))}
               </div>
 
-              <ScrollArea className="h-[360px] pr-4">
+              <ScrollArea className="h-90 pr-4">
                 <div className="grid gap-3">
-                  {curatedLoading ? (
+                  {curatedLoading || searchLoading ? (
                     <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Loading curated{" "}
                       {assetType === "equity" ? "stocks" : "funds"}...
                     </div>
-                  ) : filteredItems.length === 0 ? (
+                  ) : displayItems.length === 0 ? (
                     <div className="flex h-40 items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
                       No curated items found.
                     </div>
                   ) : (
-                    filteredItems.map((item) => {
+                    displayItems.map((item) => {
                       const selected = selectedSeedItems.some(
                         (x) => x.symbol === item.symbol,
                       );
@@ -552,19 +635,16 @@ export function CreateWatchlistDialog({
             </div>
           )}
 
-          <Separator />
-
-          <DialogFooter className="px-6 py-4 sm:justify-between">
+          <DialogFooter className="sm:justify-between">
             {step === 1 ? (
-              <>
-                <div />
+              <div className="flex w-full justify-end gap-2">
                 <Button type="button" onClick={handleNext}>
                   Next
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex w-full justify-end gap-2">
                 <Button type="button" variant="outline" onClick={handleBack}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Back
@@ -580,7 +660,7 @@ export function CreateWatchlistDialog({
                     "Create watchlist"
                   )}
                 </Button>
-              </>
+              </div>
             )}
           </DialogFooter>
         </form>
