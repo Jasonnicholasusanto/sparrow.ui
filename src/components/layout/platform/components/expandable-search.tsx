@@ -122,7 +122,7 @@ export function ExpandableSearch() {
 
     setOpen(false);
     setQuery("");
-    router.push(`/platform/stocks/${item.symbol}`);
+    router.push(`/platform/ticker/${item.symbol}`);
   }
 
   async function handleSelectHistoryItem(item: SearchHistoryEntry) {
@@ -136,7 +136,7 @@ export function ExpandableSearch() {
     setQuery("");
 
     if ((item.type || "").toLowerCase() === "stock") {
-      router.push(`/platform/stocks/${item.query}`);
+      router.push(`/platform/ticker/${item.query}`);
       return;
     }
 

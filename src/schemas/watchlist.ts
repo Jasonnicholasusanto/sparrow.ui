@@ -71,3 +71,13 @@ export interface CreatedWatchlistResponse {
   watchlist: WatchlistOut;
   watchlist_items: WatchlistItemBase[];
 }
+
+export interface WatchlistRowItem {
+  symbol: string;
+  displayName: string;
+  exchange?: string | null;
+  currency?: string | null;
+  marketPrice?: number | null;
+  marketChange?: number | null;
+  marketChangePercent?: number | null;
+}

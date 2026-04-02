@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getUserByUsername } from "@/lib/data/server/user";
 import { TraderProfileView } from "./components/trader-profile-view";
+import { PageMotion } from "@/components/layout/motion-wrapper";
 
 export default async function TraderPage({
   params,
@@ -15,5 +16,9 @@ export default async function TraderPage({
     notFound();
   }
 
-  return <TraderProfileView profile={profile} username={username} />;
+  return (
+    <PageMotion>
+      <TraderProfileView profile={profile} username={username} />
+    </PageMotion>
+  );
 }

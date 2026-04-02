@@ -3,17 +3,13 @@
 import { StockHistoryResponse, StockInfoResponse } from "@/schemas/stock";
 import { Endpoints } from "@/lib/api/endpoints";
 import { serverApiClient } from "@/lib/api/server";
+import { stockDataPaths } from "../shared/stock";
 
 export async function getStockInfo(ticker: string) {
-  return serverApiClient<StockInfoResponse>(
-    `${Endpoints.Yfinance.Base}${
-      Endpoints.Yfinance.Stocks.Base
-    }${Endpoints.Yfinance.Stocks.Info(ticker)}`,
-    {
-      method: "GET",
-      version: Endpoints.Yfinance.Stocks.BaseVersion,
-    },
-  );
+  return serverApiClient<StockInfoResponse>(stockDataPaths.info(ticker), {
+    method: "GET",
+    version: Endpoints.Yfinance.Stocks.BaseVersion,
+  });
 }
 
 export async function getStockHistory(

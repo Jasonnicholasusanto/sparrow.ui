@@ -37,7 +37,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-import { WatchlistItemRow } from "./watchlist-item-row";
+import {
+  quoteResultToWatchlistRowItem,
+  screenerTickerInfoToWatchlistRowItem,
+  WatchlistItemRow,
+} from "./watchlist-item-row";
 import {
   createWatchlistClient,
   getWatchlistQuantityTypesClient,
@@ -46,7 +50,7 @@ import {
 import { fetchCuratedScreensClient } from "@/lib/data/client/screener";
 import { WatchlistDetailCreateRequest } from "@/schemas/watchlist";
 import { ScreenerTickerInfo } from "@/schemas/screener";
-import { SearchQuotesResponse } from "@/schemas/search";
+import { QuoteResult, SearchQuotesResponse } from "@/schemas/search";
 import { searchQuotesClient } from "@/lib/data/client/search";
 
 const createWatchlistSchema = z.object({
@@ -107,7 +111,7 @@ export function CreateWatchlistDialog({
   const [search, setSearch] = useState("");
   const [isSubmitting, startSubmitting] = useTransition();
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<ScreenerTickerInfo[]>([]);
+  const [searchResults, setSearchResults] = useState<QuoteResult[]>([]);
   const debouncedSearch = useDebouncedValue(search, 500);
 
   const form = useForm<CreateWatchlistFormValues>({
@@ -222,9 +226,25 @@ export function CreateWatchlistDialog({
     };
   }, [debouncedSearch, open, step]);
 
+  const normalizedCuratedItems = useMemo(
+    () => curatedItems.map(screenerTickerInfoToWatchlistRowItem),
+    [curatedItems],
+  );
+
+  const normalizedSearchResults = useMemo(
+    () => searchResults.map(quoteResultToWatchlistRowItem),
+    [searchResults],
+  );
+
+  // const displayItems = useMemo(() => {
+  //   return debouncedSearch.trim() ? searchResults : curatedItems;
+  // }, [debouncedSearch, searchResults, curatedItems]);
+
   const displayItems = useMemo(() => {
-    return debouncedSearch.trim() ? searchResults : curatedItems;
-  }, [debouncedSearch, searchResults, curatedItems]);
+    return debouncedSearch.trim()
+      ? normalizedSearchResults
+      : normalizedCuratedItems;
+  }, [debouncedSearch, normalizedSearchResults, normalizedCuratedItems]);
 
   function handleToggleSeedItem(item: ScreenerTickerInfo) {
     const current = form.getValues("seedItems");

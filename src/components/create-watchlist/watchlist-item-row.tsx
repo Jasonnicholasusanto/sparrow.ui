@@ -6,36 +6,77 @@ import { cn } from "@/lib/utils";
 import { ScreenerTickerInfo } from "@/schemas/screener";
 import { environment } from "@/lib/utils/env";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { QuoteResult } from "@/schemas/search";
+import { WatchlistRowItem } from "@/schemas/watchlist";
 
 type WatchlistItemRowProps = {
-  item: ScreenerTickerInfo;
+  item: WatchlistRowItem;
   selected: boolean;
-  onToggle: (item: ScreenerTickerInfo) => void;
+  onToggle: (item: WatchlistRowItem) => void;
 };
+
+function calculateChangePercent(
+  change?: number | null,
+  previousClose?: number | null,
+): number | null {
+  if (change == null || previousClose == null || previousClose === 0) {
+    return null;
+  }
+
+  return (change / previousClose) * 100;
+}
+
+export function quoteResultToWatchlistRowItem(
+  item: QuoteResult,
+): WatchlistRowItem {
+  return {
+    symbol: item.symbol,
+    displayName: item.shortname || item.longname || item.symbol,
+    exchange: item.exchange || item.exchDisp || null,
+    currency: item.currency || null,
+    marketPrice: item.lastPrice ?? null,
+    marketChange: item.regularMarketChange ?? null,
+    marketChangePercent:
+      item.regularMarketChangePercent ??
+      calculateChangePercent(
+        item.regularMarketChange,
+        item.regularMarketPreviousClose ?? item.previousClose,
+      ),
+  };
+}
+
+export function screenerTickerInfoToWatchlistRowItem(
+  item: ScreenerTickerInfo,
+): WatchlistRowItem {
+  return {
+    symbol: item.symbol,
+    displayName: item.displayName || item.longName || item.symbol,
+    exchange: item.exchange ?? null,
+    currency: item.currency ?? null,
+    marketPrice: item.regularMarketPrice ?? null,
+    marketChange: item.regularMarketChange ?? null,
+    marketChangePercent: calculateChangePercent(
+      item.regularMarketChange,
+      item.regularMarketPreviousClose,
+    ),
+  };
+}
 
 export function WatchlistItemRow({
   item,
   selected,
   onToggle,
 }: WatchlistItemRowProps) {
-  const isPositive = (item.regularMarketChange ?? 0) >= 0;
+  const isPositive = (item.marketChange ?? 0) >= 0;
 
   const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
 
-  const displayName = item.displayName || item.longName || item.symbol;
+  const displayName = item.displayName || item.displayName || item.symbol;
 
-  function getChangePercent(item: ScreenerTickerInfo): number | null {
-    const change = item.regularMarketChange;
-    const prevClose = item.regularMarketPreviousClose;
-
-    if (change == null || prevClose == null || prevClose === 0) {
-      return null;
-    }
-
-    return (change / prevClose) * 100;
-  }
-
-  const regularMarketChangePercent = getChangePercent(item);
+  const regularMarketChangePercent = calculateChangePercent(
+    item.marketChange,
+    item.marketChangePercent,
+  );
 
   return (
     <div
@@ -74,9 +115,9 @@ export function WatchlistItemRow({
           </p>
 
           <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-            {typeof item.regularMarketPrice === "number" ? (
+            {typeof item.marketPrice === "number" ? (
               <span>
-                {item.currency ?? "USD"} {item.regularMarketPrice.toFixed(2)}
+                {item.currency ?? "USD"} {item.marketPrice.toFixed(2)}
               </span>
             ) : null}
 
@@ -86,8 +127,8 @@ export function WatchlistItemRow({
                 isPositive ? "text-emerald-600" : "text-red-600",
               )}
             >
-              {item.regularMarketChange != null
-                ? (isPositive ? "+" : "") + item.regularMarketChange.toFixed(2)
+              {item.marketChange != null
+                ? (isPositive ? "+" : "") + item.marketChange.toFixed(2)
                 : null}
             </span>
 

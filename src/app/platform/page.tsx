@@ -26,6 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import BorderGlow from "@/components/border-glow";
+import { PageMotion } from "@/components/layout/motion-wrapper";
 
 type Watchlist = {
   id: string;
@@ -243,293 +244,298 @@ export default function DashboardPage() {
   const today = format(new Date(), "EEEE, d MMMM yyyy");
 
   return (
-    <div className="space-y-8">
-      <section>
-        <Card className="overflow-hidden rounded-3xl">
-          <CardHeader>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">{today}</p>
-              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-                {greeting}, {userName}
-              </h1>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              glowRadius={40}
-              glowIntensity={1}
-              coneSpread={25}
-              animated={false}
-              colors={["#c084fc", "#f472b6", "#38bdf8"]}
-            >
-              <div className="rounded-2xl p-4 shadow-sm">
-                <div className="mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Daily Brief</span>
-                </div>
-
-                <p className="text-sm leading-6 text-muted-foreground md:text-base">
-                  Your watchlists are showing mixed momentum today, with AI and
-                  semiconductor exposure continuing to lead performance. Risk
-                  remains concentrated in high-growth tech, while macro
-                  commentary and upcoming earnings could drive short-term
-                  volatility. The strongest current tailwind is positive
-                  sentiment around AI leaders, but names with stretched
-                  valuations may react sharply to any negative surprise.
-                </p>
+    <PageMotion>
+      <div className="space-y-8">
+        <section>
+          <Card className="overflow-hidden rounded-3xl">
+            <CardHeader>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{today}</p>
+                <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+                  {greeting}, {userName}
+                </h1>
               </div>
-            </BorderGlow>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section>
-        <SectionHeading
-          icon={<Briefcase className="h-4 w-4" />}
-          title="Your Watchlists"
-          description="Quick access to the groups you are tracking most closely."
-        />
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {watchlists.map((watchlist) => (
-            <Card
-              key={watchlist.id}
-              className="rounded-3xl transition-transform hover:-translate-y-0.5"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-base">
-                      {watchlist.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {watchlist.description}
-                    </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BorderGlow
+                edgeSensitivity={30}
+                glowColor="40 80 80"
+                backgroundColor="#060010"
+                glowRadius={40}
+                glowIntensity={1}
+                coneSpread={25}
+                animated={false}
+                colors={["#c084fc", "#f472b6", "#38bdf8"]}
+              >
+                <div className="rounded-2xl p-4 shadow-sm">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Daily Brief</span>
                   </div>
-                  <ChangePill value={watchlist.dailyChange} />
+
+                  <p className="text-sm leading-6 text-muted-foreground md:text-base">
+                    Your watchlists are showing mixed momentum today, with AI
+                    and semiconductor exposure continuing to lead performance.
+                    Risk remains concentrated in high-growth tech, while macro
+                    commentary and upcoming earnings could drive short-term
+                    volatility. The strongest current tailwind is positive
+                    sentiment around AI leaders, but names with stretched
+                    valuations may react sharply to any negative surprise.
+                  </p>
                 </div>
-              </CardHeader>
+              </BorderGlow>
+            </CardContent>
+          </Card>
+        </section>
 
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Stocks</p>
-                    <p className="font-medium">{watchlist.stocksCount}</p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-muted-foreground">Leading ticker</p>
-                    <p className="font-medium">{watchlist.topTicker}</p>
-                  </div>
-                </div>
-
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-between"
-                >
-                  <Link href={`/watchlists/${watchlist.id}`}>
-                    Open watchlist
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <div>
+        <section>
           <SectionHeading
-            icon={<TrendingUp className="h-4 w-4" />}
-            title="Key Movers"
-            description="A quick look at the stocks moving most in your universe."
+            icon={<Briefcase className="h-4 w-4" />}
+            title="Your Watchlists"
+            description="Quick access to the groups you are tracking most closely."
           />
 
-          <Card className="rounded-3xl">
-            <CardContent className="p-3">
-              <div className="space-y-2">
-                {keyMovers.map((item) => (
-                  <div
-                    key={item.symbol}
-                    className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium">{item.symbol}</p>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {item.name}
-                      </p>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {watchlists.map((watchlist) => (
+              <Card
+                key={watchlist.id}
+                className="rounded-3xl transition-transform hover:-translate-y-0.5"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base">
+                        {watchlist.name}
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        {watchlist.description}
+                      </CardDescription>
+                    </div>
+                    <ChangePill value={watchlist.dailyChange} />
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Stocks</p>
+                      <p className="font-medium">{watchlist.stocksCount}</p>
                     </div>
 
                     <div className="text-right">
-                      <p className="font-medium">{item.price}</p>
-                      <p
-                        className={`text-sm ${
-                          item.change >= 0
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {item.change >= 0 ? "+" : ""}
-                        {item.change.toFixed(2)}%
-                      </p>
+                      <p className="text-muted-foreground">Leading ticker</p>
+                      <p className="font-medium">{watchlist.topTicker}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
-        <div>
-          <SectionHeading
-            icon={<Globe className="h-4 w-4" />}
-            title="Major Indices"
-            description="Broader market context to anchor your watchlist movements."
-          />
-
-          <Card className="rounded-3xl">
-            <CardContent className="p-3">
-              <div className="space-y-2">
-                {majorIndices.map((item) => (
-                  <div
-                    key={item.symbol}
-                    className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="w-full justify-between"
                   >
-                    <div className="min-w-0">
-                      <p className="font-medium">{item.symbol}</p>
-                      <p className="truncate text-sm text-muted-foreground">
-                        {item.name}
-                      </p>
-                    </div>
+                    <Link href={`/watchlists/${watchlist.id}`}>
+                      Open watchlist
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
 
-                    <div className="text-right">
-                      <p className="font-medium">{item.price}</p>
-                      <p
-                        className={`text-sm ${
-                          item.change >= 0
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {item.change >= 0 ? "+" : ""}
-                        {item.change.toFixed(2)}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <div>
+            <SectionHeading
+              icon={<TrendingUp className="h-4 w-4" />}
+              title="Key Movers"
+              description="A quick look at the stocks moving most in your universe."
+            />
 
-      <section>
-        <SectionHeading
-          icon={<Newspaper className="h-4 w-4" />}
-          title="Latest News"
-          description="Curated headlines tied to your tracked themes and stocks."
-        />
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          {newsItems.map((item) => (
-            <Card
-              key={item.id}
-              className="group rounded-3xl transition-transform hover:-translate-y-0.5"
-            >
-              <CardHeader className="space-y-3 pb-3">
-                <div className="flex items-center justify-between gap-3">
-                  <Badge variant="outline" className="rounded-full">
-                    {item.category}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {item.time}
-                  </span>
-                </div>
-
-                <CardTitle className="text-base leading-6">
-                  {item.title}
-                </CardTitle>
-                <CardDescription className="line-clamp-3">
-                  {item.summary}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {item.relatedTickers.map((ticker) => (
-                    <Badge
-                      key={ticker}
-                      variant="secondary"
-                      className="rounded-full"
+            <Card className="rounded-3xl">
+              <CardContent className="p-3">
+                <div className="space-y-2">
+                  {keyMovers.map((item) => (
+                    <div
+                      key={item.symbol}
+                      className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
                     >
-                      {ticker}
-                    </Badge>
+                      <div className="min-w-0">
+                        <p className="font-medium">{item.symbol}</p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {item.name}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-medium">{item.price}</p>
+                        <p
+                          className={`text-sm ${
+                            item.change >= 0
+                              ? "text-emerald-600"
+                              : "text-rose-600"
+                          }`}
+                        >
+                          {item.change >= 0 ? "+" : ""}
+                          {item.change.toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant="secondary"
-                    className={getSentimentBadgeClass(item.sentiment)}
-                  >
-                    {item.sentiment}
-                  </Badge>
+          <div>
+            <SectionHeading
+              icon={<Globe className="h-4 w-4" />}
+              title="Major Indices"
+              description="Broader market context to anchor your watchlist movements."
+            />
 
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    Read more
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+            <Card className="rounded-3xl">
+              <CardContent className="p-3">
+                <div className="space-y-2">
+                  {majorIndices.map((item) => (
+                    <div
+                      key={item.symbol}
+                      className="flex items-center justify-between rounded-2xl px-3 py-3 hover:bg-muted/40"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium">{item.symbol}</p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {item.name}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-medium">{item.price}</p>
+                        <p
+                          className={`text-sm ${
+                            item.change >= 0
+                              ? "text-emerald-600"
+                              : "text-rose-600"
+                          }`}
+                        >
+                          {item.change >= 0 ? "+" : ""}
+                          {item.change.toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <section>
-        <SectionHeading
-          icon={<Brain className="h-4 w-4" />}
-          title="AI Insights"
-          description="Short, high-signal interpretations to help you focus on what matters."
-        />
+        <section>
+          <SectionHeading
+            icon={<Newspaper className="h-4 w-4" />}
+            title="Latest News"
+            description="Curated headlines tied to your tracked themes and stocks."
+          />
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {aiInsights.map((insight) => (
-            <Card
-              key={insight.id}
-              className={`rounded-3xl border ${getInsightToneClass(insight.tone)}`}
-            >
-              <CardContent className="p-5">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="rounded-2xl border bg-background p-2 text-muted-foreground">
-                    {insight.tone === "positive" ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : insight.tone === "negative" ? (
-                      <AlertTriangle className="h-4 w-4" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
+          <div className="grid gap-4 lg:grid-cols-3">
+            {newsItems.map((item) => (
+              <Card
+                key={item.id}
+                className="group rounded-3xl transition-transform hover:-translate-y-0.5"
+              >
+                <CardHeader className="space-y-3 pb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge variant="outline" className="rounded-full">
+                      {item.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {item.time}
+                    </span>
                   </div>
 
-                  <Badge variant="outline" className="rounded-full capitalize">
-                    {insight.tone}
-                  </Badge>
-                </div>
+                  <CardTitle className="text-base leading-6">
+                    {item.title}
+                  </CardTitle>
+                  <CardDescription className="line-clamp-3">
+                    {item.summary}
+                  </CardDescription>
+                </CardHeader>
 
-                <h3 className="text-base font-semibold">{insight.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {insight.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-    </div>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {item.relatedTickers.map((ticker) => (
+                      <Badge
+                        key={ticker}
+                        variant="secondary"
+                        className="rounded-full"
+                      >
+                        {ticker}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      variant="secondary"
+                      className={getSentimentBadgeClass(item.sentiment)}
+                    >
+                      {item.sentiment}
+                    </Badge>
+
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      Read more
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeading
+            icon={<Brain className="h-4 w-4" />}
+            title="AI Insights"
+            description="Short, high-signal interpretations to help you focus on what matters."
+          />
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {aiInsights.map((insight) => (
+              <Card
+                key={insight.id}
+                className={`rounded-3xl border ${getInsightToneClass(insight.tone)}`}
+              >
+                <CardContent className="p-5">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="rounded-2xl border bg-background p-2 text-muted-foreground">
+                      {insight.tone === "positive" ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : insight.tone === "negative" ? (
+                        <AlertTriangle className="h-4 w-4" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                    </div>
+
+                    <Badge
+                      variant="outline"
+                      className="rounded-full capitalize"
+                    >
+                      {insight.tone}
+                    </Badge>
+                  </div>
+
+                  <h3 className="text-base font-semibold">{insight.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    {insight.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      </div>
+    </PageMotion>
   );
 }

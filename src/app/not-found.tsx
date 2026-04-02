@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
 import { PageMotion } from "@/components/layout/motion-wrapper";
 import FaultyTerminal from "@/components/layout/faulty-terminal";
 import FuzzyText from "@/components/fuzzy-text";

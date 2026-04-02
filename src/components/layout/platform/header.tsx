@@ -40,13 +40,6 @@ import { useHeader } from "@/providers/header-provider";
 import { ExpandableSearch } from "./components/expandable-search";
 import { CreateWatchlistDialog } from "@/components/create-watchlist/create-watchlist-dialog";
 
-const navItems = [
-  { label: "Dashboard", href: "/platform", icon: LayoutDashboard },
-  { label: "Analytics", href: "/platform/analytics", icon: BarChart3 },
-  { label: "Watchlist", href: "/platform/watchlist", icon: Star },
-  { label: "Settings", href: "/platform/settings", icon: Settings },
-];
-
 export default function Header() {
   const { user } = useUser();
   const { navbarRoutes } = useHeader();
