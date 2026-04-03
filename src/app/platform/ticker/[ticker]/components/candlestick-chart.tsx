@@ -1,9 +1,11 @@
 "use client";
 
+import { CrosshairCursor } from "@/components/shared-chart-components";
 import { formatTooltipLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
-import { GREEN, RED } from "@/styles/chart";
+import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -20,6 +22,11 @@ interface CandlestickChartProps {
   data: HistoryPoint[];
   symbol?: string;
   period?: string;
+  brushRange: {
+    startIndex: number;
+    endIndex: number;
+  };
+  onBrushChange: (range: { startIndex: number; endIndex: number }) => void;
 }
 
 type CandleDatum = HistoryPoint & {
@@ -81,7 +88,16 @@ function VolumeShape(props: any) {
   const fill = payload.close > payload.open ? GREEN(0.5) : RED(0.5);
 
   return (
-    <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} ry={2} />
+    <Rectangle
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={fill}
+      rx={2}
+      ry={2}
+      radius={2}
+    />
   );
 }
 
@@ -111,7 +127,7 @@ function CandleShape(props: any) {
         stroke={fill}
         strokeWidth={1}
       />
-      <Rectangle {...props} fill={fill} radius={1} />
+      <Rectangle {...props} fill={fill} radius={2} />
     </g>
   );
 }
@@ -154,6 +170,8 @@ export default function CandlestickChart({
   data,
   symbol = "STOCK",
   period,
+  brushRange,
+  onBrushChange,
 }: CandlestickChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -165,25 +183,46 @@ export default function CandlestickChart({
 
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const formattedData: CandleDatum[] = [...data]
-    .sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )
-    .map((d) => ({
-      ...d,
-      isUp: d.close >= d.open,
-    }));
-  const defaultStartIndex = Math.max(0, formattedData.length - 40);
-  const defaultEndIndex = Math.max(0, formattedData.length - 1);
+  const formattedData: CandleDatum[] = data.map((d) => ({
+    ...d,
+    isUp: d.close >= d.open,
+  }));
+  const [hoverState, setHoverState] = useState<{
+    chartY: number | null;
+    activeLabel?: string;
+  } | null>(null);
 
   const candleBodyDataKey = (entry: HistoryPoint): [number, number] => [
     Math.min(entry.open, entry.close),
     Math.max(entry.open, entry.close),
   ];
 
-  const brushStroke = isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)";
-  const brushFill = isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.05)";
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleBrushChange = useCallback(
+    (range: { startIndex?: number; endIndex?: number }) => {
+      if (
+        typeof range.startIndex !== "number" ||
+        typeof range.endIndex !== "number"
+      ) {
+        return;
+      }
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        onBrushChange({
+          startIndex: range.startIndex as number,
+          endIndex: range.endIndex as number,
+        });
+      }, 150);
+    },
+    [onBrushChange],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   return (
     <div className="w-full h-125 lg:h-116">
@@ -191,13 +230,13 @@ export default function CandlestickChart({
         <ComposedChart
           data={formattedData}
           margin={{
-            top: 8,
-            right: 12,
-            left: 12,
+            top: 10,
+            right: 0,
+            left: 0,
             bottom: 0,
           }}
           barGap="-100%"
-          barCategoryGap={2}
+          barCategoryGap={1}
         >
           <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.08)" />
 
@@ -206,7 +245,6 @@ export default function CandlestickChart({
             tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={false}
-            // minTickGap={24}
             tickFormatter={(iso) => formatXAxisLabel(iso, period)}
           />
 
@@ -217,13 +255,14 @@ export default function CandlestickChart({
               const padding = range * 0.35;
               return [dataMin - padding, dataMax];
             }}
-            tickFormatter={(v) => `$${v.toFixed(0)}`}
+            tickCount={8}
+            tickFormatter={(v) => v.toFixed(2)}
             tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             orientation="right"
             type="number"
-            allowDecimals={false}
+            allowDecimals={true}
           />
 
           <YAxis
@@ -239,6 +278,7 @@ export default function CandlestickChart({
 
           <Tooltip
             content={<CustomTooltip symbol={symbol} />}
+            cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />
 
@@ -260,11 +300,12 @@ export default function CandlestickChart({
             dataKey="timestamp"
             height={13}
             travellerWidth={5}
-            startIndex={defaultStartIndex}
-            endIndex={defaultEndIndex}
-            stroke={brushStroke}
-            fill={brushFill}
+            startIndex={brushRange.startIndex}
+            endIndex={brushRange.endIndex}
+            stroke={getBrushStroke(isDark)}
+            fill={getBrushFill(isDark)}
             tickFormatter={() => ""}
+            onChange={handleBrushChange}
           />
         </ComposedChart>
       </ResponsiveContainer>

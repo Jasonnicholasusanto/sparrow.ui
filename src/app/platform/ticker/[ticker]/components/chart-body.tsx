@@ -25,6 +25,12 @@ import { HistoryPoint } from "@/schemas/stock";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import { stockDataPeriods } from "@/lib/options/stockDataOptions";
 import { getStockHistoryClient } from "@/lib/data/client/stock";
+import SyncedStockCharts from "./synced-charts";
+
+type BrushRange = {
+  startIndex: number;
+  endIndex: number;
+};
 
 interface StockChartProps {
   symbol: string;
@@ -35,7 +41,7 @@ export default function StockChartBody({ symbol }: StockChartProps) {
   const [change, setChange] = useState(0);
   const [percentChange, setPercentChange] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState<"line" | "candle">("line");
+  const [chartType, setChartType] = useState<"line" | "candle">("candle");
   const [interval, setInterval] = useState("30m");
   const [period, setPeriod] = useState("1mo");
 
@@ -210,18 +216,13 @@ export default function StockChartBody({ symbol }: StockChartProps) {
           <DotWave size="50" speed="1" color="white" />
         </div>
       ) : (
-        <div className="h-125 lg:h-116 flex items-center justify-center rounded-md pt-10">
-          {chartType === "line" ? (
-            <StockAreaLineChart
-              data={history}
-              change={change}
-              period={period}
-              symbol={symbol}
-            />
-          ) : (
-            <CandlestickChart data={history} symbol={symbol} />
-          )}
-        </div>
+        <SyncedStockCharts
+          data={history}
+          symbol={symbol}
+          period={period}
+          change={change}
+          chartType={chartType}
+        />
       )}
     </div>
   );

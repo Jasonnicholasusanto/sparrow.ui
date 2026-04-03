@@ -1,9 +1,11 @@
 "use client";
 
+import { CrosshairCursor } from "@/components/shared-chart-components";
 import { formatTooltipLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
 import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
+import { useMemo } from "react";
 import {
   Area,
   XAxis,
@@ -13,6 +15,7 @@ import {
   Bar,
   ComposedChart,
   Brush,
+  Rectangle,
 } from "recharts";
 
 interface StockAreaLineChartProps {
@@ -20,26 +23,19 @@ interface StockAreaLineChartProps {
   change?: number;
   period?: string;
   symbol?: string;
+  brushRange: {
+    startIndex: number;
+    endIndex: number;
+  };
+  onBrushChange: (range: { startIndex: number; endIndex: number }) => void;
 }
 
 function formatXAxisLabel(iso: string, period?: string) {
   const date = new Date(iso);
 
   switch (period) {
-    // intraday (1d normally) → include time
     case "1d":
     case "5d":
-      return date
-        .toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-        .replace(",", "");
-
-    // 1 week or shorter intraday ranges (like 30m candles)
     case "1wk":
     case "1w":
       return date
@@ -52,7 +48,6 @@ function formatXAxisLabel(iso: string, period?: string) {
         })
         .replace(",", "");
 
-    // 1 month or 3 month → show only day
     case "1mo":
     case "3mo":
     case "6mo":
@@ -62,7 +57,6 @@ function formatXAxisLabel(iso: string, period?: string) {
         year: "numeric",
       });
 
-    // 1 year or max → show month + year
     case "1y":
     case "2y":
     case "5y":
@@ -73,7 +67,6 @@ function formatXAxisLabel(iso: string, period?: string) {
         year: "numeric",
       });
 
-    // fallback default
     default:
       return date.toLocaleString("en-GB", {
         day: "2-digit",
@@ -111,11 +104,19 @@ function CustomTooltip({ active, payload, label, symbol }: any) {
 
 function VolumeShape(props: any) {
   const { x, y, width, height, payload } = props;
-
   const fill = payload.close > payload.open ? GREEN(0.5) : RED(0.5);
 
   return (
-    <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} ry={2} />
+    <Rectangle
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={fill}
+      rx={2}
+      ry={2}
+      radius={2}
+    />
   );
 }
 
@@ -124,6 +125,8 @@ export default function StockAreaLineChart({
   change,
   period,
   symbol,
+  brushRange,
+  onBrushChange,
 }: StockAreaLineChartProps) {
   if (!data || data.length === 0) {
     return (
@@ -136,10 +139,26 @@ export default function StockAreaLineChart({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
-  const defaultStartIndex = Math.max(0, data.length - 40);
-  const defaultEndIndex = Math.max(0, data.length - 1);
+  const selectedData = useMemo(() => {
+    const start = Math.max(0, brushRange.startIndex);
+    const end = Math.min(data.length - 1, brushRange.endIndex);
+    return data.slice(start, end + 1);
+  }, [data, brushRange]);
 
-  const isPositive = change !== undefined ? change > 0 : true;
+  const isPositive = useMemo(() => {
+    if (selectedData.length >= 2) {
+      return (
+        selectedData[selectedData.length - 1].close >= selectedData[0].close
+      );
+    }
+
+    if (change !== undefined) {
+      return change > 0;
+    }
+
+    return true;
+  }, [selectedData, change]);
+
   const areaColor = isPositive ? GREEN() : RED();
 
   return (
@@ -149,13 +168,13 @@ export default function StockAreaLineChart({
           data={data}
           responsive
           margin={{
-            top: 0,
+            top: 10,
             right: 0,
             left: 0,
             bottom: 0,
           }}
           barGap="-100%"
-          barCategoryGap={2}
+          barCategoryGap={1}
         >
           <defs>
             <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -163,6 +182,7 @@ export default function StockAreaLineChart({
               <stop offset="95%" stopColor={areaColor} stopOpacity={0} />
             </linearGradient>
           </defs>
+
           <XAxis
             dataKey="timestamp"
             tick={{ fontSize: 10 }}
@@ -170,6 +190,7 @@ export default function StockAreaLineChart({
             axisLine={false}
             tickFormatter={(iso) => formatXAxisLabel(iso, period)}
           />
+
           <YAxis
             yAxisId="price"
             domain={([dataMin, dataMax]) => {
@@ -177,14 +198,16 @@ export default function StockAreaLineChart({
               const padding = range * 0.35;
               return [dataMin - padding, dataMax];
             }}
-            tickFormatter={(v) => `$${v.toFixed(0)}`}
+            tickCount={8}
+            tickFormatter={(v) => v.toFixed(2)}
             tick={{ fontSize: 10 }}
             tickLine={false}
             axisLine={false}
             orientation="right"
             type="number"
-            allowDecimals={false}
+            allowDecimals={true}
           />
+
           <YAxis
             yAxisId="volume"
             scale="sqrt"
@@ -195,8 +218,10 @@ export default function StockAreaLineChart({
             }}
             hide
           />
+
           <Tooltip
             content={<CustomTooltip symbol={symbol} />}
+            cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />
 
@@ -208,6 +233,7 @@ export default function StockAreaLineChart({
             radius={[2, 2, 0, 0]}
             shape={VolumeShape}
           />
+
           <Area
             yAxisId="price"
             type="bump"
@@ -221,11 +247,25 @@ export default function StockAreaLineChart({
             dataKey="timestamp"
             height={13}
             travellerWidth={5}
-            startIndex={defaultStartIndex}
-            endIndex={defaultEndIndex}
+            startIndex={brushRange.startIndex}
+            endIndex={brushRange.endIndex}
             stroke={getBrushStroke(isDark)}
             fill={getBrushFill(isDark)}
             tickFormatter={() => ""}
+            onChange={(range) => {
+              if (
+                !range ||
+                typeof range.startIndex !== "number" ||
+                typeof range.endIndex !== "number"
+              ) {
+                return;
+              }
+
+              onBrushChange({
+                startIndex: range.startIndex,
+                endIndex: range.endIndex,
+              });
+            }}
           />
         </ComposedChart>
       </ResponsiveContainer>
