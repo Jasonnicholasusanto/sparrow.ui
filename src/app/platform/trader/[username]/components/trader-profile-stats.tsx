@@ -15,12 +15,12 @@ export function TraderProfileStats({ profile }: TraderProfileStatsProps) {
     },
     {
       label: "Followers",
-      value: profile.followers_count,
+      value: profile.followersCount,
       icon: Users,
     },
     {
       label: "Following",
-      value: profile.following_count,
+      value: profile.followingCount,
       icon: BarChart3,
     },
   ];

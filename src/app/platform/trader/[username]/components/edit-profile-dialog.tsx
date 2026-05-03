@@ -77,12 +77,12 @@ const editProfileSchema = z
         /^[a-zA-Z0-9._]+$/,
         "Username can only contain letters, numbers, dots, and underscores",
       ),
-    full_name: z
+    fullName: z
       .string()
       .trim()
       .min(2, "Full name must be at least 2 characters")
       .max(100, "Full name is too long"),
-    display_name: z
+    displayName: z
       .string()
       .trim()
       .max(50, "Display name must be 50 characters or less")
@@ -94,16 +94,16 @@ const editProfileSchema = z
       .max(280, "Bio must be 280 characters or less")
       .optional()
       .or(z.literal("")),
-    birth_date: z.string({
+    birthDate: z.string({
       error: "Birth date is required",
     }),
-    phone_number: z.string().trim().min(1, "Phone number is required"),
+    phoneNumber: z.string().trim().min(1, "Phone number is required"),
     location: z.string().trim().min(1, "Location is required"),
   })
   .refine(
     (data) => {
       const today = new Date();
-      const dob = new Date(data.birth_date);
+      const dob = new Date(data.birthDate);
       const age = today.getFullYear() - dob.getFullYear();
       const hasHadBirthdayThisYear =
         today.getMonth() > dob.getMonth() ||
@@ -115,7 +115,7 @@ const editProfileSchema = z
     },
     {
       message: "You must be at least 13 years old",
-      path: ["birth_date"],
+      path: ["birthDate"],
     },
   );
 
@@ -137,11 +137,11 @@ export default function EditProfileDialog({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
       username: user?.profile?.username ?? "",
-      full_name: user?.profile?.full_name ?? "",
-      display_name: user?.profile?.display_name ?? "",
+      fullName: user?.profile?.fullName ?? "",
+      displayName: user?.profile?.displayName ?? "",
       bio: user?.profile?.bio ?? "",
-      birth_date: user?.profile?.birth_date ?? "",
-      phone_number: user?.profile?.phone_number ?? "",
+      birthDate: user?.profile?.birthDate ?? "",
+      phoneNumber: user?.profile?.phoneNumber ?? "",
       location: user?.profile?.location ?? "AU",
     },
   });
@@ -159,11 +159,11 @@ export default function EditProfileDialog({
 
     reset({
       username: user?.profile?.username ?? "",
-      full_name: user?.profile?.full_name ?? "",
-      display_name: user?.profile?.display_name ?? "",
+      fullName: user?.profile?.fullName ?? "",
+      displayName: user?.profile?.displayName ?? "",
       bio: user?.profile?.bio ?? "",
-      birth_date: user?.profile?.birth_date ?? "",
-      phone_number: user?.profile?.phone_number ?? "",
+      birthDate: user?.profile?.birthDate ?? "",
+      phoneNumber: user?.profile?.phoneNumber ?? "",
       location: user?.profile?.location ?? "AU",
     });
   }, [open, user, reset]);
@@ -172,11 +172,11 @@ export default function EditProfileDialog({
     await onSave({
       ...values,
       username: values.username.trim(),
-      full_name: values.full_name.trim(),
-      display_name: values.display_name?.trim() ?? "",
+      fullName: values.fullName.trim(),
+      displayName: values.displayName?.trim() ?? "",
       bio: values.bio?.trim() ?? "",
-      birth_date: values.birth_date,
-      phone_number: values.phone_number?.trim(),
+      birthDate: values.birthDate,
+      phoneNumber: values.phoneNumber?.trim(),
       location: values.location?.trim(),
     });
   };
@@ -227,17 +227,17 @@ export default function EditProfileDialog({
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Field>
-                    <FieldLabel htmlFor="full_name">
+                    <FieldLabel htmlFor="fullName">
                       Full name <span className="text-red-500">*</span>
                     </FieldLabel>
 
                     <InputGroup>
                       <InputGroupInput
-                        id="full_name"
+                        id="fullName"
                         required
                         placeholder="Enter your full name"
                         autoComplete="name"
-                        {...register("full_name")}
+                        {...register("fullName")}
                       />
                       <InputGroupAddon>
                         <InputGroupText>
@@ -246,24 +246,24 @@ export default function EditProfileDialog({
                       </InputGroupAddon>
                     </InputGroup>
 
-                    {errors.full_name?.message && (
-                      <FieldError>{errors.full_name.message}</FieldError>
+                    {errors.fullName?.message && (
+                      <FieldError>{errors.fullName.message}</FieldError>
                     )}
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="display_name">Display name</FieldLabel>
+                    <FieldLabel htmlFor="displayName">Display name</FieldLabel>
 
                     <InputGroup>
                       <InputGroupInput
-                        id="display_name"
+                        id="displayName"
                         placeholder="Your public display name"
-                        {...register("display_name")}
+                        {...register("displayName")}
                       />
                     </InputGroup>
 
-                    {errors.display_name?.message && (
-                      <FieldError>{errors.display_name.message}</FieldError>
+                    {errors.displayName?.message && (
+                      <FieldError>{errors.displayName.message}</FieldError>
                     )}
                   </Field>
                 </div>
@@ -286,16 +286,16 @@ export default function EditProfileDialog({
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Field>
-                    <FieldLabel htmlFor="birth_date">Birth date</FieldLabel>
+                    <FieldLabel htmlFor="birthDate">Birth date</FieldLabel>
 
                     <Controller
                       control={control}
-                      name="birth_date"
+                      name="birthDate"
                       render={({ field }) => (
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
-                              id="birth_date"
+                              id="birthDate"
                               type="button"
                               variant="outline"
                               className={cn(
@@ -333,17 +333,17 @@ export default function EditProfileDialog({
                       You must be at least 13 years old.
                     </FieldDescription>
 
-                    {errors.birth_date?.message && (
-                      <FieldError>{errors.birth_date.message}</FieldError>
+                    {errors.birthDate?.message && (
+                      <FieldError>{errors.birthDate.message}</FieldError>
                     )}
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="phone_number">Phone number</FieldLabel>
+                    <FieldLabel htmlFor="phoneNumber">Phone number</FieldLabel>
 
                     <Controller
                       control={control}
-                      name="phone_number"
+                      name="phoneNumber"
                       render={({ field }) => (
                         <div className="space-y-2">
                           <PhoneInput
@@ -357,8 +357,8 @@ export default function EditProfileDialog({
                       )}
                     />
 
-                    {errors.phone_number?.message && (
-                      <FieldError>{errors.phone_number.message}</FieldError>
+                    {errors.phoneNumber?.message && (
+                      <FieldError>{errors.phoneNumber.message}</FieldError>
                     )}
                   </Field>
                 </div>

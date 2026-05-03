@@ -1,4 +1,4 @@
-import { CopyrightFooter } from "@/components/copyrightFooter";
+import { CopyrightFooter } from "@/components/copyright-footer";
 import { ForgotPasswordForm } from "./forgot-password-form";
 
 export default function Page() {
