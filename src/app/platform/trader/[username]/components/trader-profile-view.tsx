@@ -208,9 +208,8 @@ export function TraderProfileView({
 
   async function handleSaveProfile(values: UpdateUserProfilePayload) {
     try {
-      console.log("Saving profile with values:", values);
       await updateProfile(values);
-      await refreshUser();
+      await refreshCurrentUser();
       setEditProfileOpen(false);
       toast.success("Profile updated");
     } catch (err: any) {
