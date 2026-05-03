@@ -46,7 +46,7 @@ export interface ScreenerTickerInfo {
 }
 
 export interface ScreenerCuratedResult {
-  asset_type: "equity" | "fund";
+  assetType: "equity" | "fund";
   category: string;
   count: number;
   results: ScreenerTickerInfo[];

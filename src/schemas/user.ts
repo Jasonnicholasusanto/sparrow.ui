@@ -2,73 +2,73 @@ import { WatchlistSummary } from "./watchlist";
 
 export interface UserProfile {
   id: string;
-  auth_id: string;
+  authId: string;
   username: string;
-  full_name: string;
-  display_name: string | null;
+  fullName: string;
+  displayName: string | null;
   bio: string | null;
-  birth_date: string | null;
-  phone_number: string | null;
-  profile_picture: string | null;
-  background_picture: string | null;
-  email_address: string;
+  birthDate: string | null;
+  phoneNumber: string | null;
+  profilePicture: string | null;
+  backgroundPicture: string | null;
+  emailAddress: string;
   location: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface UpdateUserProfilePayload {
   username: string;
-  full_name: string;
-  display_name?: string;
+  fullName: string;
+  displayName?: string;
   bio?: string;
-  birth_date?: string;
-  phone_number?: string;
+  birthDate?: string;
+  phoneNumber?: string;
   location?: string;
 }
 
 export interface UserActivity {
-  topics_created: number;
-  entries_created: number;
-  comments_created: number;
-  topic_upvotes: number;
-  topic_downvotes: number;
-  entry_upvotes: number;
-  entry_downvotes: number;
-  comment_upvotes: number;
-  comment_downvotes: number;
-  total_points: number;
-  weekly_points: number;
-  monthly_points: number;
-  user_id: string;
-  updated_at: string;
+  topicsCreated: number;
+  entriesCreated: number;
+  commentsCreated: number;
+  topicUpvotes: number;
+  topicDownvotes: number;
+  entryUpvotes: number;
+  entryDownvotes: number;
+  commentUpvotes: number;
+  commentDownvotes: number;
+  totalPoints: number;
+  weeklyPoints: number;
+  monthlyPoints: number;
+  userId: string;
+  updatedAt: string;
 }
 
 export interface UserResponse {
   profile: UserProfile;
   activity: UserActivity;
-  followers_count: number;
-  following_count: number;
+  followersCount: number;
+  followingCount: number;
   watchlists: WatchlistSummary;
 }
 
 export class User {
   profile: UserProfile;
   activity: UserActivity;
-  followers_count: number;
-  following_count: number;
+  followersCount: number;
+  followingCount: number;
   watchlists: WatchlistSummary;
 
   constructor(
     profile: UserProfile,
     activity: UserActivity,
-    followers_count: number,
-    following_count: number,
+    followersCount: number,
+    followingCount: number,
     watchlists: WatchlistSummary,
   ) {
     this.profile = profile;
     this.activity = activity;
-    this.followers_count = followers_count;
-    this.following_count = following_count;
+    this.followersCount = followersCount;
+    this.followingCount = followingCount;
     this.watchlists = watchlists;
   }
 
@@ -76,29 +76,29 @@ export class User {
     return new User(
       json.profile,
       json.activity,
-      json.followers_count,
-      json.following_count,
+      json.followersCount,
+      json.followingCount,
       json.watchlists,
     );
   }
 
   get userFirstName(): string {
-    return this.profile.full_name.split(" ")[0];
+    return this.profile.fullName.split(" ")[0];
   }
 
   get displayName(): string {
-    if (this.profile.display_name) {
-      return this.profile.display_name;
+    if (this.profile.displayName) {
+      return this.profile.displayName;
     }
-    return this.profile.full_name;
+    return this.profile.fullName;
   }
 
   get totalPoints(): number {
-    return this.activity.total_points;
+    return this.activity.totalPoints;
   }
 
   get avatar(): string | null {
-    return this.profile.profile_picture;
+    return this.profile.profilePicture;
   }
 
   get userWatchlists(): WatchlistSummary {

@@ -41,10 +41,10 @@ export function TraderProfileView({
   const [bannerLoading, setBannerLoading] = useState(false);
 
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
-    profileData?.profile_picture || undefined,
+    profileData?.profilePicture || undefined,
   );
   const [bannerUrl, setBannerUrl] = useState<string | undefined>(
-    profileData?.background_picture || undefined,
+    profileData?.backgroundPicture || undefined,
   );
 
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -60,8 +60,8 @@ export function TraderProfileView({
     parsedUser?.profile?.username?.toLowerCase() === username?.toLowerCase();
 
   useEffect(() => {
-    setAvatarUrl(profileData?.profile_picture || undefined);
-    setBannerUrl(profileData?.background_picture || undefined);
+    setAvatarUrl(profileData?.profilePicture || undefined);
+    setBannerUrl(profileData?.backgroundPicture || undefined);
   }, [profileData]);
 
   async function refreshCurrentUser() {

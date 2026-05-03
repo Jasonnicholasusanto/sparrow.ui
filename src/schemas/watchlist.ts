@@ -1,18 +1,23 @@
+import { Tags } from "./tags";
+
 export interface WatchlistOut {
-  id: string;
+  id: number;
   name: string;
   description?: string | null;
-  visibility: "PRIVATE" | "PUBLIC" | "SHARED";
-  created_at: string;
-  updated_at: string;
-  owner_profile_id: string;
-  is_fork?: boolean;
-  forked_from_id?: string | null;
+  visibility: string;
+  createdAt: string;
+  updatedAt: string;
+  originalAuthorId: string;
+  forkCount: boolean;
+  forkedAt?: string | null;
+  forkedFromId?: string | null;
+  isDefault: boolean;
+  allocationType: string;
 }
 
-export interface WatchlistDetailOut {
-  watchlist: WatchlistOut;
+export interface WatchlistDetailOut extends WatchlistOut {
   items: WatchlistItemBase[];
+  tags: Tags[];
 }
 
 export interface WatchlistSummary {
@@ -33,7 +38,7 @@ export interface UserWatchlistGroups {
   shared: WatchlistDetailOut[];
   bookmarked: WatchlistDetailOut[];
 
-  total_count: number;
+  totalCount: number;
 
   counts: UserWatchlistCounts;
 }
@@ -48,8 +53,8 @@ export interface WatchlistDataCreate {
   name: string;
   description?: string | null;
   visibility: string;
-  allocation_type: string;
-  is_default: boolean;
+  allocationType: string;
+  isDefault: boolean;
 }
 
 export interface WatchlistItemBase {
@@ -57,19 +62,19 @@ export interface WatchlistItemBase {
   exchange: string;
   note?: string | null;
   position?: number | null;
-  percentage?: number | null;
   quantity?: number | null;
 }
 
 export interface WatchlistDetailCreateRequest {
-  watchlist_data: WatchlistDataCreate;
+  watchlistData: WatchlistDataCreate;
+  tags?: string[];
   items?: WatchlistItemBase[];
 }
 
 export interface CreatedWatchlistResponse {
   message: string;
   watchlist: WatchlistOut;
-  watchlist_items: WatchlistItemBase[];
+  watchlistItems: WatchlistItemBase[];
 }
 
 export interface WatchlistRowItem {
@@ -80,4 +85,77 @@ export interface WatchlistRowItem {
   marketPrice?: number | null;
   marketChange?: number | null;
   marketChangePercent?: number | null;
+}
+
+export interface TickerDetails {
+  symbol: string;
+  lastPrice: number | null;
+  currency: string | null;
+  volume: number | null;
+  previousClose: number | null;
+  regularMarketChange: number | null;
+  regularMarketChangePercent: number | null;
+}
+
+export interface WatchlistItem {
+  symbol: string;
+  exchange: string;
+  note?: string | null;
+  position?: number | null;
+  referencePrice?: number | null;
+  quantity?: number | null;
+  id: number;
+  watchlistId: number;
+  createdAt: string;
+  updatedAt: string;
+  tickerDetails?: TickerDetails | null;
+}
+
+export interface AddWatchlistItem {
+  symbol: string;
+  exchange: string;
+  note?: string | null;
+  position?: number | null;
+  quantity?: number | null;
+  referencePrice?: number | null;
+}
+
+export interface Watchlist {
+  id: number;
+  userId: string;
+  name: string;
+  description?: string | null;
+  visibility: string;
+  forkedFromId?: number | null;
+  forkedAt?: string | null;
+  forkCount: number;
+  originalAuthorId?: string | null;
+  allocationType: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+  items: WatchlistItem[];
+  tags: Tags[];
+}
+
+export interface WatchlistCounts {
+  owned: number;
+  forked: number;
+  shared: number;
+  bookmarked: number;
+}
+
+export interface UserWatchlistsGroupedResultsOut {
+  created: Watchlist[];
+  forked: Watchlist[];
+  shared: Watchlist[];
+  bookmarked: Watchlist[];
+  totalCount: number;
+  counts: WatchlistCounts;
+}
+
+export interface UserWatchlistsResponse {
+  limit: number;
+  offset: number;
+  results: UserWatchlistsGroupedResultsOut;
 }

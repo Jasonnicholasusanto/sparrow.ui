@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { CalendarDays, Globe, MapPin } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { UserProfile } from "@/schemas/publicUser";
 
 interface TraderProfileBioProps {
@@ -7,7 +6,7 @@ interface TraderProfileBioProps {
 }
 
 export function TraderProfileBio({ profile }: TraderProfileBioProps) {
-  const joinedDate = new Date(profile.created_at).toLocaleDateString("en-AU", {
+  const joinedDate = new Date(profile.createdAt).toLocaleDateString("en-AU", {
     month: "long",
     year: "numeric",
   });

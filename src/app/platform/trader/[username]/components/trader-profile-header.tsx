@@ -37,7 +37,7 @@ export default function TraderProfileHeader({
   onOpenBannerDialog,
 }: TraderProfileHeaderProps) {
   const userProfile = profile.profile;
-  const joinedLabel = formatJoinDate(userProfile?.created_at);
+  const joinedLabel = formatJoinDate(userProfile?.createdAt);
 
   return (
     <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
@@ -108,10 +108,10 @@ export default function TraderProfileHeader({
                 @{userProfile.username}
               </h1>
 
-              {userProfile.display_name ? (
+              {userProfile.displayName ? (
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {userProfile.display_name}
+                    {userProfile.displayName}
                   </p>
                 </div>
               ) : null}
@@ -151,14 +151,14 @@ export default function TraderProfileHeader({
         <div className="flex flex-wrap items-center gap-6 text-sm">
           <div className="inline-flex items-center gap-1.5">
             <span className="font-semibold text-foreground">
-              {profile.following_count ?? 0}
+              {profile.followingCount ?? 0}
             </span>
             Following
           </div>
 
           <div className="inline-flex items-center gap-1.5">
             <span className="font-semibold text-foreground">
-              {profile.followers_count ?? 0}
+              {profile.followersCount ?? 0}
             </span>
             Followers
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AddWatchlistItem,
   CreatedWatchlistResponse,
   GetMyWatchlistsResponse,
   WatchlistDetailCreateRequest,
@@ -31,6 +32,20 @@ export async function getMyWatchlistsClient(): Promise<GetMyWatchlistsResponse> 
     {
       method: "GET",
       version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}
+
+export async function addItemToWatchlistClient(
+  watchlistId: number,
+  payload: AddWatchlistItem,
+): Promise<{ message: string }> {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.addWatchlistItem(watchlistId),
+    {
+      method: "POST",
+      version: Endpoints.Watchlists.BaseVersion,
+      body: JSON.stringify(payload),
     },
   );
 }

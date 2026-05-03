@@ -29,12 +29,9 @@ export default function SyncedStockCharts({
     [data],
   );
 
-  const initialStartIndex = Math.max(0, sortedData.length - 40);
-  const initialEndIndex = Math.max(0, sortedData.length - 1);
-
   const [brushRange, setBrushRange] = useState({
-    startIndex: initialStartIndex,
-    endIndex: initialEndIndex,
+    startIndex: 0,
+    endIndex: sortedData.length - 1,
   });
 
   const handleBrushChange = (range: {
