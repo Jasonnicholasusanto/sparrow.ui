@@ -28,7 +28,7 @@ export default function StockHeader({ stock }: { stock: StockInfoResponse }) {
               src={logoUrl}
               alt={`${stock.shortName || stock.symbol} logo`}
               loading="lazy"
-              className="object-cover"
+              // className="object-cover"
             />
             <AvatarFallback className="text-xs font-medium">
               {stock.symbol?.charAt(0).toUpperCase() || "?"}

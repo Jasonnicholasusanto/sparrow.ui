@@ -2,46 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StockAreaLineChart from "./area-line-chart";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DotWave } from "ldrs/react";
-import CandlestickChart from "./candlestick-chart";
-import {
-  LuChartArea,
-  LuChartCandlestick,
-  LuEye,
-  LuHeart,
-} from "react-icons/lu";
+import { LuChartArea, LuChartCandlestick, LuHeart } from "react-icons/lu";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import { HistoryPoint } from "@/schemas/stock";
+import { HistoryPoint, StockInfoResponse } from "@/schemas/stock";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import { stockDataPeriods } from "@/lib/options/stockDataOptions";
 import { getStockHistoryClient } from "@/lib/data/client/stock";
 import SyncedStockCharts from "./synced-charts";
-
-type BrushRange = {
-  startIndex: number;
-  endIndex: number;
-};
+import { Spinner } from "@/components/ui/spinner";
+import AddToWatchlistDialog from "./add-to-watchlist-dialog";
 
 interface StockChartProps {
-  symbol: string;
+  stock: StockInfoResponse;
 }
 
-export default function StockChartBody({ symbol }: StockChartProps) {
+export default function StockChartBody({ stock }: StockChartProps) {
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [change, setChange] = useState(0);
   const [percentChange, setPercentChange] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState<"line" | "candle">("candle");
+  const [chartType, setChartType] = useState<"line" | "candle">("line");
   const [interval, setInterval] = useState("30m");
   const [period, setPeriod] = useState("1mo");
 
@@ -49,7 +38,7 @@ export default function StockChartBody({ symbol }: StockChartProps) {
     setLoading(true);
 
     try {
-      const data = await getStockHistoryClient(symbol, interval, period);
+      const data = await getStockHistoryClient(stock.symbol, interval, period);
 
       const sorted = (data.history || []).sort(
         (a, b) =>
@@ -58,7 +47,7 @@ export default function StockChartBody({ symbol }: StockChartProps) {
 
       setHistory(sorted);
       setChange(data.change || 0);
-      setPercentChange(data.change_percentage || 0);
+      setPercentChange(data.changePercentage || 0);
     } catch (err) {
       console.error("Failed to fetch ticker history:", err);
     } finally {
@@ -72,7 +61,7 @@ export default function StockChartBody({ symbol }: StockChartProps) {
 
   useEffect(() => {
     fetchHistory();
-  }, [symbol, interval, period]);
+  }, [stock.symbol, interval, period]);
 
   function getIntervalForPeriod(period: string): string | undefined {
     return stockDataPeriods.find((p) => p.period === period)?.interval;
@@ -143,9 +132,21 @@ export default function StockChartBody({ symbol }: StockChartProps) {
           </Tooltip>
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>
-              <Button variant="default" className="rounded-xl p-2">
-                <LuEye />
-              </Button>
+              <AddToWatchlistDialog
+                stock={{
+                  symbol: stock.symbol,
+                  market: stock.exchange || stock.market,
+                  shortName: stock.shortName,
+                  longName: stock.longName,
+                  currentPrice: stock.currentPrice,
+                  regularMarketPrice: stock.regularMarketPrice,
+                  regularMarketChange: stock.regularMarketChange,
+                  regularMarketChangePercent: stock.regularMarketChangePercent,
+                  postMarketChange: stock.postMarketChange,
+                  postMarketChangePercent: stock.postMarketChangePercent,
+                  currency: stock.currency,
+                }}
+              />
             </TooltipTrigger>
             <TooltipContent side="bottom">Add to watchlist</TooltipContent>
           </Tooltip>
@@ -212,13 +213,16 @@ export default function StockChartBody({ symbol }: StockChartProps) {
       </div>
 
       {loading ? (
-        <div className="h-125 lg:h-116 rounded-lg flex bg-muted-foreground/3 items-center justify-center">
-          <DotWave size="50" speed="1" color="white" />
+        <div className="relative w-full h-125 lg:h-116 rounded-lg">
+          <Skeleton className="w-full h-full rounded-xl" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Spinner className="h-10 w-10 animate-spin" />
+          </div>
         </div>
       ) : (
         <SyncedStockCharts
           data={history}
-          symbol={symbol}
+          symbol={stock.symbol}
           period={period}
           change={change}
           chartType={chartType}

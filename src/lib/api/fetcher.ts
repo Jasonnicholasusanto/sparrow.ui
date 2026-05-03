@@ -1,4 +1,5 @@
 import { ApiError } from "./errors";
+import camelcaseKeys from "camelcase-keys";
 
 /**
  * A utility function to make API requests with proper error handling and response parsing.
@@ -43,6 +44,11 @@ export async function apiFetch<T>(
       res.status,
       typeof parsedBody === "string" ? parsedBody : JSON.stringify(parsedBody),
     );
+  }
+
+  // Convert snake_case keys to camelCase recursively if the body is an object
+  if (parsedBody && typeof parsedBody === "object") {
+    return camelcaseKeys(parsedBody as any, { deep: true }) as T;
   }
 
   return parsedBody as T;

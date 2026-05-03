@@ -49,7 +49,7 @@ export function ForgotPasswordForm({
     <div
       className={cn(
         "flex flex-col justify-center items-center gap-12",
-        className
+        className,
       )}
       {...props}
     >
@@ -87,7 +87,7 @@ export function ForgotPasswordForm({
           </CardContent>
           <CardFooter className="flex justify-center">
             <Link
-              href="/auth/login"
+              href="/auth/sign-in"
               className="underline underline-offset-4 text-sm hover:text-primary"
             >
               Back to login
@@ -143,7 +143,7 @@ export function ForgotPasswordForm({
               <div className="text-center text-sm">
                 Remembered it?{" "}
                 <Link
-                  href="/auth/login"
+                  href="/auth/sign-in"
                   className="underline underline-offset-4"
                 >
                   Back to login

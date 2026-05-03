@@ -7,7 +7,7 @@ export function CrosshairCursor({ points, height, top }: any) {
     <g>
       <line
         x1={x}
-        y1={top}
+        y1={y}
         x2={x}
         y2={top + height}
         stroke={stroke}

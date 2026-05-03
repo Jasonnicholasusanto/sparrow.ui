@@ -105,7 +105,10 @@ export function UpdatePasswordForm({
 
             <div className="text-center text-sm">
               Remembered it?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link
+                href="/auth/sign-in"
+                className="underline underline-offset-4"
+              >
                 Back to login
               </Link>
             </div>

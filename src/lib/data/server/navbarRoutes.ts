@@ -12,7 +12,7 @@ export async function getNavbarRoutes(): Promise<NavbarRoute[] | null> {
         version: Endpoints.Navbar.BaseVersion,
       },
     );
-    return data?.navbar_routes ?? null;
+    return data?.navbarRoutes ?? null;
   } catch (e: any) {
     if (e?.status === 404) {
       return null;

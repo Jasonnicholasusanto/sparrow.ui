@@ -38,7 +38,7 @@ export default async function StocksPage({
       <Suspense
         fallback={<p className="text-muted-foreground">Loading charts...</p>}
       >
-        <StockChartBody symbol={stock.symbol} />
+        <StockChartBody stock={stock} />
       </Suspense>
 
       <Suspense

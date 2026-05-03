@@ -1,7 +1,7 @@
 "use client";
 
 import { CrosshairCursor } from "@/components/shared-chart-components";
-import { formatTooltipLabel } from "@/lib/utils/chartUtils";
+import { formatTooltipLabel, formatXAxisLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
 import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
@@ -30,57 +30,11 @@ interface StockAreaLineChartProps {
   onBrushChange: (range: { startIndex: number; endIndex: number }) => void;
 }
 
-function formatXAxisLabel(iso: string, period?: string) {
-  const date = new Date(iso);
-
-  switch (period) {
-    case "1d":
-    case "5d":
-    case "1wk":
-    case "1w":
-      return date
-        .toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-        .replace(",", "");
-
-    case "1mo":
-    case "3mo":
-    case "6mo":
-      return date.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-
-    case "1y":
-    case "2y":
-    case "5y":
-    case "10y":
-    case "max":
-      return date.toLocaleString("en-GB", {
-        month: "short",
-        year: "numeric",
-      });
-
-    default:
-      return date.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-  }
-}
-
 function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-function CustomTooltip({ active, payload, label, symbol }: any) {
+function CustomTooltip({ active, payload, label, symbol, period }: any) {
   if (!active || !payload || payload.length === 0) return null;
 
   const point = payload[0]?.payload as HistoryPoint | undefined;
@@ -89,7 +43,9 @@ function CustomTooltip({ active, payload, label, symbol }: any) {
   return (
     <div className="rounded-xl border bg-card/95 backdrop-blur-sm p-3 shadow-md text-xs space-y-1.5 min-w-52">
       <div className="font-semibold text-sm">{symbol}</div>
-      <div className="text-muted-foreground">{formatTooltipLabel(label)}</div>
+      <div className="text-muted-foreground">
+        {formatTooltipLabel(label, period)}
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
         <div>
           Price: <b>{formatPrice(point.close)}</b>
@@ -163,7 +119,7 @@ export default function StockAreaLineChart({
 
   return (
     <div className="w-full h-125 lg:h-116">
-      <ResponsiveContainer width="100%" maxHeight={500}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <ComposedChart
           data={data}
           responsive
@@ -198,7 +154,7 @@ export default function StockAreaLineChart({
               const padding = range * 0.35;
               return [dataMin - padding, dataMax];
             }}
-            tickCount={8}
+            tickCount={6}
             tickFormatter={(v) => v.toFixed(2)}
             tick={{ fontSize: 10 }}
             tickLine={false}
@@ -220,7 +176,7 @@ export default function StockAreaLineChart({
           />
 
           <Tooltip
-            content={<CustomTooltip symbol={symbol} />}
+            content={<CustomTooltip symbol={symbol} period={period} />}
             cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />
@@ -229,7 +185,6 @@ export default function StockAreaLineChart({
             yAxisId="volume"
             dataKey="volume"
             opacity={0.5}
-            barSize={1000}
             radius={[2, 2, 0, 0]}
             shape={VolumeShape}
           />

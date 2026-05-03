@@ -44,7 +44,7 @@ export default function Header() {
   const { user } = useUser();
   const { navbarRoutes } = useHeader();
   const pathname = usePathname();
-  const { firstName, lastName } = parseFullName(user?.profile?.full_name);
+  const { firstName, lastName } = parseFullName(user?.profile?.fullName);
 
   async function handleLogout() {
     await logout();
@@ -129,8 +129,8 @@ export default function Header() {
                   >
                     <Avatar className="h-10 w-10 rounded-full">
                       <AvatarImage
-                        src={user?.profile?.profile_picture ?? ""}
-                        alt={user?.profile?.full_name ?? ""}
+                        src={user?.profile?.profilePicture ?? ""}
+                        alt={user?.profile?.fullName ?? ""}
                       />
                       <AvatarFallback>
                         {firstName?.charAt(0)}
@@ -150,12 +150,12 @@ export default function Header() {
             >
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                  <Avatar className="h-10 w-10 rounded-lg">
+                  <Avatar className="h-10 w-10 rounded-full">
                     <AvatarImage
-                      src={user?.profile?.profile_picture ?? ""}
-                      alt={user?.profile?.full_name ?? ""}
+                      src={user?.profile?.profilePicture ?? ""}
+                      alt={user?.profile?.fullName ?? ""}
                     />
-                    <AvatarFallback className="rounded-lg">
+                    <AvatarFallback className="rounded-full">
                       {firstName?.charAt(0)}
                       {lastName?.charAt(0)}
                     </AvatarFallback>

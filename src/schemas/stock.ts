@@ -197,6 +197,6 @@ export interface HistoryPoint {
 export interface StockHistoryResponse {
   symbol: string;
   change?: number;
-  change_percentage?: number;
+  changePercentage?: number;
   history: Array<HistoryPoint>;
 }

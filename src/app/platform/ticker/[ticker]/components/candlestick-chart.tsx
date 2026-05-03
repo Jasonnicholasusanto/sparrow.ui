@@ -1,11 +1,11 @@
 "use client";
 
 import { CrosshairCursor } from "@/components/shared-chart-components";
-import { formatTooltipLabel } from "@/lib/utils/chartUtils";
+import { formatTooltipLabel, formatXAxisLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
 import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   CartesianGrid,
@@ -32,51 +32,6 @@ interface CandlestickChartProps {
 type CandleDatum = HistoryPoint & {
   isUp: boolean;
 };
-
-function formatXAxisLabel(iso: string, period?: string) {
-  const date = new Date(iso);
-
-  switch (period) {
-    case "1d":
-    case "5d":
-    case "1wk":
-    case "1w":
-      return date
-        .toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-        .replace(",", "");
-
-    case "1mo":
-    case "3mo":
-    case "6mo":
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-
-    case "1y":
-    case "2y":
-    case "5y":
-    case "10y":
-    case "max":
-      return date.toLocaleDateString("en-GB", {
-        month: "short",
-        year: "numeric",
-      });
-
-    default:
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-  }
-}
 
 function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
@@ -132,7 +87,7 @@ function CandleShape(props: any) {
   );
 }
 
-function CustomTooltip({ active, payload, label, symbol }: any) {
+function CustomTooltip({ active, payload, label, symbol, period }: any) {
   if (!active || !payload || payload.length === 0) return null;
 
   const point = payload[0]?.payload as HistoryPoint | undefined;
@@ -144,7 +99,9 @@ function CustomTooltip({ active, payload, label, symbol }: any) {
   return (
     <div className="rounded-xl border bg-card/95 backdrop-blur-sm p-3 shadow-md text-xs space-y-1.5 min-w-52">
       <div className="font-semibold text-sm">{symbol}</div>
-      <div className="text-muted-foreground">{formatTooltipLabel(label)}</div>
+      <div className="text-muted-foreground">
+        {formatTooltipLabel(label, period)}
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
         <div>
           Open: <b>{formatPrice(point.open)}</b>
@@ -183,14 +140,14 @@ export default function CandlestickChart({
 
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const formattedData: CandleDatum[] = data.map((d) => ({
-    ...d,
-    isUp: d.close >= d.open,
-  }));
-  const [hoverState, setHoverState] = useState<{
-    chartY: number | null;
-    activeLabel?: string;
-  } | null>(null);
+  const formattedData = useMemo<CandleDatum[]>(
+    () =>
+      data.map((d) => ({
+        ...d,
+        isUp: d.close >= d.open,
+      })),
+    [data],
+  );
 
   const candleBodyDataKey = (entry: HistoryPoint): [number, number] => [
     Math.min(entry.open, entry.close),
@@ -198,6 +155,20 @@ export default function CandlestickChart({
   ];
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastCommittedRangeRef = useRef<{
+    startIndex: number;
+    endIndex: number;
+  }>({
+    startIndex: brushRange.startIndex,
+    endIndex: brushRange.endIndex,
+  });
+
+  useEffect(() => {
+    lastCommittedRangeRef.current = {
+      startIndex: brushRange.startIndex,
+      endIndex: brushRange.endIndex,
+    };
+  }, [brushRange.startIndex, brushRange.endIndex]);
 
   const handleBrushChange = useCallback(
     (range: { startIndex?: number; endIndex?: number }) => {
@@ -207,26 +178,38 @@ export default function CandlestickChart({
       ) {
         return;
       }
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+      const nextStart = range.startIndex;
+      const nextEnd = range.endIndex;
+
+      const prev = lastCommittedRangeRef.current;
+
+      if (prev.startIndex === nextStart && prev.endIndex === nextEnd) {
+        return;
+      }
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+
       debounceTimer.current = setTimeout(() => {
+        lastCommittedRangeRef.current = {
+          startIndex: nextStart,
+          endIndex: nextEnd,
+        };
+
         onBrushChange({
-          startIndex: range.startIndex as number,
-          endIndex: range.endIndex as number,
+          startIndex: nextStart,
+          endIndex: nextEnd,
         });
       }, 150);
     },
     [onBrushChange],
   );
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
-  }, []);
-
   return (
     <div className="w-full h-125 lg:h-116">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <ComposedChart
           data={formattedData}
           margin={{
@@ -238,8 +221,6 @@ export default function CandlestickChart({
           barGap="-100%"
           barCategoryGap={1}
         >
-          <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.08)" />
-
           <XAxis
             dataKey="timestamp"
             tick={{ fontSize: 10 }}
@@ -255,7 +236,7 @@ export default function CandlestickChart({
               const padding = range * 0.35;
               return [dataMin - padding, dataMax];
             }}
-            tickCount={8}
+            tickCount={6}
             tickFormatter={(v) => v.toFixed(2)}
             tick={{ fontSize: 10 }}
             tickLine={false}
@@ -277,7 +258,7 @@ export default function CandlestickChart({
           />
 
           <Tooltip
-            content={<CustomTooltip symbol={symbol} />}
+            content={<CustomTooltip symbol={symbol} period={period} />}
             cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />
@@ -285,6 +266,7 @@ export default function CandlestickChart({
           <Bar
             yAxisId="volume"
             dataKey="volume"
+            opacity={0.5}
             radius={[2, 2, 0, 0]}
             shape={VolumeShape}
           />

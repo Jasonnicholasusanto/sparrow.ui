@@ -30,10 +30,21 @@ export const Endpoints = {
     WatchlistByName: (name: string) => `/@${name}`,
     MyWatchlists: `/me`,
     WatchlistItems: (watchlistId: number) => `/${watchlistId}/items`,
-    AddWatchlistItem: `/add-item`,
-    AddWatchlistItemsBulk: (watchlistId: number) => `/add-items/${watchlistId}`,
+    AddWatchlistItem: (watchlistId: number) => `/${watchlistId}/add-item`,
+    AddWatchlistItemsBulk: (watchlistId: number) => `/${watchlistId}/add-items`,
     DeleteWatchlistItem: (itemId: number) => `/item/${itemId}`,
     DeleteWatchlist: (watchlistId: number) => `/${watchlistId}`,
+  },
+  Tags: {
+    BaseVersion: "v1",
+    Base: "/tags",
+    Search: (query: string, limit = 8) => {
+      const params = new URLSearchParams({
+        q: query,
+        limit: String(limit),
+      });
+      return `/search?${params.toString()}`;
+    },
   },
   FavouriteStocks: {
     BaseVersion: "v1",

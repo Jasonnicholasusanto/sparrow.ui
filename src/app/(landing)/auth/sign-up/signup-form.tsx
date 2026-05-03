@@ -105,7 +105,7 @@ export function SignUpForm({
           </CardContent>
           <CardFooter className="flex justify-center">
             <Link
-              href="/auth/login"
+              href="/auth/sign-in"
               className="underline underline-offset-4 text-sm text-zinc-400 hover:text-primary"
             >
               Back to login

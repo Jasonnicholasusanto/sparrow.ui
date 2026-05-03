@@ -3,11 +3,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import Header from "@/components/layout/platform/header";
-import Onboarding, { type OnboardingFormValues } from "./components/onboarding";
+import Onboarding, {
+  type OnboardingFormValues,
+} from "./components/onboarding-dialog";
 import { useUser } from "@/providers/user-provider";
 import { toast } from "sonner";
 import { SidebarPanel } from "@/components/layout/platform/sidebar-panel";
 import { createProfile } from "@/lib/actions/me";
+import OnboardingDialog from "./components/onboarding-dialog";
 
 type Props = {
   children: ReactNode;
@@ -93,7 +96,7 @@ export default function PlatformShell({ children }: Props) {
     <div className="min-h-screen bg-background px-11 text-foreground">
       <Header />
 
-      <Onboarding
+      <OnboardingDialog
         open={showOnboarding}
         isSubmitting={isSaving}
         onSubmit={handleOnboardingSubmit}
