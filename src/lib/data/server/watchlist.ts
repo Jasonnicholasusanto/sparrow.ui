@@ -3,7 +3,7 @@
 import {
   CreatedWatchlistResponse,
   GetMyWatchlistsResponse,
-  WatchlistDetailCreateRequest,
+  WatchlistDetailCreatePayload,
 } from "@/schemas/watchlist";
 import { serverApiClient } from "@/lib/api/server";
 import { Endpoints } from "@/lib/api/endpoints";
@@ -34,7 +34,7 @@ export async function getMyWatchlists(): Promise<GetMyWatchlistsResponse> {
 }
 
 export async function createWatchlist(
-  payload: WatchlistDetailCreateRequest,
+  payload: WatchlistDetailCreatePayload,
 ): Promise<CreatedWatchlistResponse> {
   return serverApiClient<CreatedWatchlistResponse>(
     watchlistDataPaths.create(),

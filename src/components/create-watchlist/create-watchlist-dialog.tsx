@@ -59,7 +59,7 @@ import {
 } from "@/lib/data/client/watchlist";
 import { fetchCuratedScreensClient } from "@/lib/data/client/screener";
 import {
-  WatchlistDetailCreateRequest,
+  WatchlistDetailCreatePayload,
   WatchlistRowItem,
 } from "@/schemas/watchlist";
 import { ScreenerTickerInfo } from "@/schemas/screener";
@@ -538,13 +538,13 @@ export function CreateWatchlistDialog({
       const toastId = toast.loading("Creating watchlist...");
 
       try {
-        const payload: WatchlistDetailCreateRequest = {
-          watchlistData: {
+        const payload: WatchlistDetailCreatePayload = {
+          watchlist_data: {
             name: values.name.trim(),
             description: values.description?.trim() || null,
             visibility: values.visibility,
-            allocationType: values.quantityType,
-            isDefault: values.isDefault,
+            allocation_type: values.quantityType,
+            is_default: values.isDefault,
           },
           tags: values.tags,
           items: values.seedItems.map((item, index) => ({
@@ -553,6 +553,10 @@ export function CreateWatchlistDialog({
             note: item.note?.trim() || null,
             position: index,
             quantity: item.quantity ?? null,
+            reference_price:
+              item.regularMarketPrice ??
+              item.regularMarketPreviousClose ??
+              null,
           })),
         };
 

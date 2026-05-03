@@ -18,11 +18,11 @@ export interface UserProfile {
 
 export interface UpdateUserProfilePayload {
   username: string;
-  fullName: string;
-  displayName?: string;
+  full_name: string;
+  display_name?: string;
   bio?: string;
-  birthDate?: string;
-  phoneNumber?: string;
+  birth_date?: string;
+  phone_number?: string;
   location?: string;
 }
 

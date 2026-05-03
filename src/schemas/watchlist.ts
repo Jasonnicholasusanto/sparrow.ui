@@ -58,17 +58,39 @@ export interface WatchlistDataCreate {
 }
 
 export interface WatchlistItemBase {
+  id: number;
   symbol: string;
   exchange: string;
   note?: string | null;
   position?: number | null;
   quantity?: number | null;
+  referencePrice?: number | null;
 }
 
 export interface WatchlistDetailCreateRequest {
   watchlistData: WatchlistDataCreate;
   tags?: string[];
   items?: WatchlistItemBase[];
+}
+
+export interface WatchlistDetailCreatePayload {
+  watchlist_data: {
+    name: string;
+    description?: string | null;
+    visibility: string;
+    allocation_type: string;
+    is_default: boolean;
+    original_author_id?: string | null;
+  };
+  tags?: string[];
+  items?: Array<{
+    symbol: string;
+    exchange: string;
+    note?: string | null;
+    position?: number | null;
+    quantity?: number | null;
+    reference_price?: number | null;
+  }>;
 }
 
 export interface CreatedWatchlistResponse {

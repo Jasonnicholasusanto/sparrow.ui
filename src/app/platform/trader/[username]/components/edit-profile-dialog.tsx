@@ -168,15 +168,15 @@ export default function EditProfileDialog({
     });
   }, [open, user, reset]);
 
-  const handleFormSubmit = async (values: UpdateUserProfilePayload) => {
+  const handleFormSubmit = async (values: EditProfileFormValues) => {
     await onSave({
       ...values,
       username: values.username.trim(),
-      fullName: values.fullName.trim(),
-      displayName: values.displayName?.trim() ?? "",
+      full_name: values.fullName.trim(),
+      display_name: values.displayName?.trim() ?? "",
       bio: values.bio?.trim() ?? "",
-      birthDate: values.birthDate,
-      phoneNumber: values.phoneNumber?.trim(),
+      birth_date: values.birthDate,
+      phone_number: values.phoneNumber?.trim(),
       location: values.location?.trim(),
     });
   };
