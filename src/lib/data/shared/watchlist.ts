@@ -8,6 +8,8 @@ export const watchlistDataPaths = {
   myWatchlists: () =>
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.MyWatchlists}`,
   create: () => `${Endpoints.Watchlists.Base}`,
+  update: (watchlistId: number) =>
+    `${Endpoints.Watchlists.Base}/${watchlistId}`,
   addWatchlistItem: (watchlistId: number) =>
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.AddWatchlistItem(
       watchlistId,

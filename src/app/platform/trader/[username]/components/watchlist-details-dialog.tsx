@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Globe, Lock, Users } from "lucide-react";
 
 import {
@@ -8,16 +9,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { WatchlistDetailOut } from "@/schemas/watchlist";
+import { WatchlistDetailsItemCard } from "./watchlist-details-items-card";
+import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 
 type WatchlistDetailsDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  trigger: React.ReactNode;
   watchlist: WatchlistDetailOut;
   isOwnProfile: boolean;
   onRefresh: () => void | Promise<void>;
@@ -32,13 +35,15 @@ function getVisibilityIcon(visibility: string) {
 }
 
 export function WatchlistDetailsDialog({
-  open,
-  onOpenChange,
+  trigger,
   watchlist,
   isOwnProfile,
+  onRefresh,
 }: WatchlistDetailsDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+
       <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -68,30 +73,7 @@ export function WatchlistDetailsDialog({
           <div className="space-y-3">
             {watchlist.items?.length ? (
               watchlist.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border p-4 flex items-start justify-between gap-4"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{item.symbol}</p>
-                      <Badge variant="outline" className="rounded-full">
-                        {item.exchange}
-                      </Badge>
-                    </div>
-
-                    {item.note ? (
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {item.note}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="text-right text-sm text-muted-foreground">
-                    <p>Position: {item.position ?? "—"}</p>
-                    <p>Quantity: {item.quantity ?? "—"}</p>
-                  </div>
-                </div>
+                <WatchlistDetailsItemCard key={item.id} item={item} />
               ))
             ) : (
               <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
@@ -105,9 +87,16 @@ export function WatchlistDetailsDialog({
           <>
             <Separator />
             <div className="flex justify-end">
-              <Button type="button" variant="outline">
-                Edit watchlist
-              </Button>
+              <WatchlistDialog
+                mode="edit"
+                watchlist={watchlist}
+                onSuccess={onRefresh}
+                trigger={
+                  <Button type="button" variant="outline">
+                    Edit watchlist
+                  </Button>
+                }
+              />
             </div>
           </>
         ) : null}

@@ -16,7 +16,7 @@ export interface WatchlistOut {
 }
 
 export interface WatchlistDetailOut extends WatchlistOut {
-  items: WatchlistItemBase[];
+  items: WatchlistItemOut[];
   tags: Tags[];
 }
 
@@ -58,7 +58,6 @@ export interface WatchlistDataCreate {
 }
 
 export interface WatchlistItemBase {
-  id: number;
   symbol: string;
   exchange: string;
   note?: string | null;
@@ -67,10 +66,11 @@ export interface WatchlistItemBase {
   referencePrice?: number | null;
 }
 
-export interface WatchlistDetailCreateRequest {
-  watchlistData: WatchlistDataCreate;
-  tags?: string[];
-  items?: WatchlistItemBase[];
+export interface WatchlistItemOut extends WatchlistItemBase {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  tickerDetails: TickerMarketSnapshotResponse;
 }
 
 export interface WatchlistDetailCreatePayload {
@@ -109,14 +109,17 @@ export interface WatchlistRowItem {
   marketChangePercent?: number | null;
 }
 
-export interface TickerDetails {
-  symbol: string;
+export interface TickerMarketSnapshotResponse {
   lastPrice: number | null;
   currency: string | null;
   volume: number | null;
   previousClose: number | null;
   regularMarketChange: number | null;
   regularMarketChangePercent: number | null;
+}
+
+export interface TickerDetails extends TickerMarketSnapshotResponse {
+  symbol: string;
 }
 
 export interface WatchlistItem {
@@ -130,7 +133,6 @@ export interface WatchlistItem {
   watchlistId: number;
   createdAt: string;
   updatedAt: string;
-  tickerDetails?: TickerDetails | null;
 }
 
 export interface AddWatchlistItem {

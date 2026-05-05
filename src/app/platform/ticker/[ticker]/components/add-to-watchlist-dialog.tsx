@@ -36,13 +36,12 @@ import {
   addItemToWatchlistClient,
   getMyWatchlistsClient,
 } from "@/lib/data/client/watchlist";
-import { CreateWatchlistDialog } from "@/components/create-watchlist/create-watchlist-dialog";
 import type {
   AddWatchlistItem,
   GetMyWatchlistsResponse,
-  Watchlist,
   WatchlistDetailOut,
 } from "@/schemas/watchlist";
+import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 
 type WatchlistTickerPreview = {
   symbol: string;
@@ -292,7 +291,8 @@ function EmptyWatchlistsState({
       </p>
 
       <div className="mt-6">
-        <CreateWatchlistDialog
+        <WatchlistDialog
+          mode="create"
           isIconOnly={false}
           initialSeedItems={[
             {

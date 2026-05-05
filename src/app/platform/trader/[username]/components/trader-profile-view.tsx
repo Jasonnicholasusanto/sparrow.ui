@@ -64,12 +64,6 @@ export function TraderProfileView({
     setBannerUrl(profileData?.backgroundPicture || undefined);
   }, [profileData]);
 
-  async function refreshCurrentUser() {
-    const freshUser = await getUserProfile();
-    setUser(freshUser);
-    return freshUser;
-  }
-
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,7 +99,7 @@ export function TraderProfileView({
       try {
         setProfileLoading(true);
         await deleteProfilePicture();
-        await refreshCurrentUser();
+        await refreshUser();
         setAvatarUrl(undefined);
       } catch (err) {
         console.error("Failed removing profile image", err);
@@ -130,7 +124,7 @@ export function TraderProfileView({
       try {
         setBannerLoading(true);
         await deleteBannerImage();
-        await refreshCurrentUser();
+        await refreshUser();
         setBannerUrl(undefined);
       } catch (err) {
         console.error("Failed removing banner image", err);
@@ -155,7 +149,7 @@ export function TraderProfileView({
       try {
         setProfileLoading(true);
         const res = await uploadProfilePicture(croppedFile);
-        await refreshCurrentUser();
+        await refreshUser();
         setAvatarUrl(res.profile_picture_url);
         setCropOpen(false);
         setCropSrc(null);
@@ -183,7 +177,7 @@ export function TraderProfileView({
       try {
         setBannerLoading(true);
         const res = await uploadBannerImage(croppedFile);
-        await refreshCurrentUser();
+        await refreshUser();
         setBannerUrl(res.banner_image_url);
         setBannerCropOpen(false);
         setBannerCropSrc(null);
@@ -209,7 +203,7 @@ export function TraderProfileView({
   async function handleSaveProfile(values: UpdateUserProfilePayload) {
     try {
       await updateProfile(values);
-      await refreshCurrentUser();
+      await refreshUser();
       setEditProfileOpen(false);
       toast.success("Profile updated");
     } catch (err: any) {

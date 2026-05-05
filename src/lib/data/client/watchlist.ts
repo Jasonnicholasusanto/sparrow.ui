@@ -62,3 +62,17 @@ export async function createWatchlistClient(
     },
   );
 }
+
+export async function updateWatchlistClient(
+  watchlistId: number,
+  payload: WatchlistDetailCreatePayload,
+): Promise<{ message: string }> {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.update(watchlistId),
+    {
+      method: "PATCH",
+      version: Endpoints.Watchlists.BaseVersion,
+      body: JSON.stringify(payload),
+    },
+  );
+}

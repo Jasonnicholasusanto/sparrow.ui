@@ -128,7 +128,7 @@ export function WatchlistItemRow({
             <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
               {typeof item.marketPrice === "number" ? (
                 <span>
-                  {item.currency ?? "USD"} {item.marketPrice.toFixed(2)}
+                  {item.currency} {item.marketPrice.toFixed(2)}
                 </span>
               ) : null}
 
@@ -155,7 +155,7 @@ export function WatchlistItemRow({
                   ) : (
                     <TrendingDown className="h-3.5 w-3.5" />
                   )}
-                  {regularMarketChangePercent.toFixed(2)}%
+                  {regularMarketChangePercent?.toFixed(2)}%
                 </span>
               ) : null}
             </div>

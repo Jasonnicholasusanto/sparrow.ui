@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { z } from "zod";
 import {
-  Star,
   Loader2,
   ChevronLeft,
   ChevronRight,
   Search,
   GripVertical,
+  Binoculars,
 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,32 +52,37 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import {
   quoteResultToWatchlistRowItem,
   screenerTickerInfoToWatchlistRowItem,
   WatchlistItemRow,
 } from "./watchlist-item-row";
+import { TagInput } from "./tag-input";
+
 import {
   createWatchlistClient,
   getWatchlistQuantityTypesClient,
   getWatchlistTypesClient,
+  updateWatchlistClient,
 } from "@/lib/data/client/watchlist";
 import { fetchCuratedScreensClient } from "@/lib/data/client/screener";
-import {
-  WatchlistDetailCreatePayload,
-  WatchlistRowItem,
-} from "@/schemas/watchlist";
+import { WatchlistDetailOut, WatchlistRowItem } from "@/schemas/watchlist";
 import { ScreenerTickerInfo } from "@/schemas/screener";
 import { QuoteResult, SearchQuotesResponse } from "@/schemas/search";
 import { searchQuotesClient } from "@/lib/data/client/search";
-import { TagInput } from "./tag-input";
 
 const QUANTITY_TYPE_UNIT = "unit";
 const QUANTITY_TYPE_PERCENTAGE = "percentage";
 const ADDED_ITEMS_GROUP = "watchlist-added-items";
 
 const seedItemSchema = z.object({
+  id: z.union([z.string(), z.number()]).optional(),
   symbol: z.string(),
   displayName: z.string().nullable().optional(),
   longName: z.string().nullable().optional(),
@@ -80,11 +91,12 @@ const seedItemSchema = z.object({
   regularMarketPrice: z.number().nullable().optional(),
   regularMarketPreviousClose: z.number().nullable().optional(),
   regularMarketChange: z.number().nullable().optional(),
+  regularMarketChangePercent: z.number().nullable().optional(),
   quantity: z.number().nullable().optional(),
   note: z.string().max(300).optional(),
 });
 
-const createWatchlistSchema = z
+const watchlistDialogSchema = z
   .object({
     name: z.string().min(1, "Watchlist name is required"),
     description: z.string().max(2000).optional(),
@@ -105,7 +117,9 @@ const createWatchlistSchema = z
       if (total > 100) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Total allocation is ${total.toFixed(1)}% — cannot exceed 100%`,
+          message: `Total allocation is ${total.toFixed(
+            1,
+          )}% — cannot exceed 100%`,
           path: ["seedItems"],
         });
       }
@@ -113,7 +127,40 @@ const createWatchlistSchema = z
   });
 
 type SeedItemFormValue = z.infer<typeof seedItemSchema>;
-type CreateWatchlistFormValues = z.infer<typeof createWatchlistSchema>;
+type WatchlistDialogFormValues = z.infer<typeof watchlistDialogSchema>;
+
+type InitialSeedItem = {
+  symbol: string;
+  displayName?: string | null;
+  longName?: string | null;
+  exchange?: string | null;
+  currency?: string | null;
+  regularMarketPrice?: number | null;
+  regularMarketPreviousClose?: number | null;
+  regularMarketChange?: number | null;
+  regularMarketChangePercent?: number | null;
+};
+
+type WatchlistDialogProps = {
+  mode?: "create" | "edit";
+  watchlist?: WatchlistDetailOut;
+  trigger?: ReactNode;
+  isIconOnly?: boolean;
+  initialSeedItems?: InitialSeedItem[];
+  startAtStep?: 1 | 2;
+  onSuccess?: () => void | Promise<void>;
+};
+
+type SortableAddedWatchlistItemProps = {
+  item: WatchlistRowItem;
+  index: number;
+  quantityType: string;
+  allocationValue: string;
+  noteValue: string;
+  onToggle: (item: WatchlistRowItem) => void;
+  onAllocationChange: (symbol: string, rawValue: string) => void;
+  onNoteChange: (symbol: string, value: string) => void;
+};
 
 function useDebouncedValue<T>(value: T, delay = 400): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -137,6 +184,26 @@ function dedupeInitialSeedItems(items: InitialSeedItem[]): InitialSeedItem[] {
   });
 }
 
+function getWatchlistValue<T>(value: T | undefined | null, fallback: T): T {
+  return value === undefined || value === null ? fallback : value;
+}
+
+function getTickerDetails(item: any) {
+  return item?.tickerDetails ?? item?.ticker_details ?? null;
+}
+
+function getWatchlistVisibility(watchlist?: any) {
+  return watchlist?.visibility ?? "";
+}
+
+function getWatchlistAllocationType(watchlist?: any) {
+  return watchlist?.allocationType ?? watchlist?.allocation_type ?? "";
+}
+
+function getWatchlistIsDefault(watchlist?: any) {
+  return Boolean(watchlist?.isDefault ?? watchlist?.is_default ?? false);
+}
+
 function toSeedItem(stock: InitialSeedItem): SeedItemFormValue {
   return {
     symbol: stock.symbol,
@@ -147,38 +214,60 @@ function toSeedItem(stock: InitialSeedItem): SeedItemFormValue {
     regularMarketPrice: stock.regularMarketPrice ?? null,
     regularMarketPreviousClose: stock.regularMarketPreviousClose ?? null,
     regularMarketChange: stock.regularMarketChange ?? null,
+    regularMarketChangePercent: stock.regularMarketChangePercent ?? null,
     quantity: null,
     note: "",
   };
 }
 
-type InitialSeedItem = {
-  symbol: string;
-  displayName?: string | null;
-  longName?: string | null;
-  exchange?: string | null;
-  currency?: string | null;
-  regularMarketPrice?: number | null;
-  regularMarketPreviousClose?: number | null;
-  regularMarketChange?: number | null;
-};
+function watchlistItemToSeedItem(item: any): SeedItemFormValue {
+  const tickerDetails = getTickerDetails(item);
 
-type CreateWatchlistDialogProps = {
-  isIconOnly?: boolean;
-  initialSeedItems?: InitialSeedItem[];
-  startAtStep?: 1 | 2;
-};
-
-type SortableAddedWatchlistItemProps = {
-  item: WatchlistRowItem;
-  index: number;
-  quantityType: string;
-  allocationValue: string;
-  noteValue: string;
-  onToggle: (item: WatchlistRowItem) => void;
-  onAllocationChange: (symbol: string, rawValue: string) => void;
-  onNoteChange: (symbol: string, value: string) => void;
-};
+  return {
+    id: item.id,
+    symbol: item.symbol,
+    displayName:
+      tickerDetails?.shortName ??
+      tickerDetails?.short_name ??
+      tickerDetails?.longName ??
+      tickerDetails?.long_name ??
+      item.displayName ??
+      item.display_name ??
+      item.longName ??
+      item.long_name ??
+      item.symbol,
+    longName:
+      tickerDetails?.longName ??
+      tickerDetails?.long_name ??
+      item.longName ??
+      item.long_name ??
+      null,
+    exchange: item.exchange ?? tickerDetails?.exchange ?? null,
+    currency: item.currency ?? tickerDetails?.currency ?? null,
+    regularMarketPrice:
+      tickerDetails?.lastPrice ??
+      tickerDetails?.last_price ??
+      tickerDetails?.regularMarketPrice ??
+      tickerDetails?.regular_market_price ??
+      null,
+    regularMarketPreviousClose:
+      tickerDetails?.previousClose ??
+      tickerDetails?.previous_close ??
+      tickerDetails?.regularMarketPreviousClose ??
+      tickerDetails?.regular_market_previous_close ??
+      null,
+    regularMarketChange:
+      tickerDetails?.regularMarketChange ??
+      tickerDetails?.regular_market_change ??
+      null,
+    regularMarketChangePercent:
+      tickerDetails?.regularMarketChangePercent ??
+      tickerDetails?.regular_market_change_percent ??
+      null,
+    quantity: item.quantity ?? null,
+    note: item.note ?? "",
+  };
+}
 
 function SortableAddedWatchlistItem({
   item,
@@ -229,11 +318,17 @@ function SortableAddedWatchlistItem({
   );
 }
 
-export function CreateWatchlistDialog({
+export function WatchlistDialog({
+  mode = "create",
+  watchlist,
+  trigger,
   isIconOnly = false,
   initialSeedItems = [],
   startAtStep = 1,
-}: CreateWatchlistDialogProps) {
+  onSuccess,
+}: WatchlistDialogProps) {
+  const isEditMode = mode === "edit";
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [metaLoading, setMetaLoading] = useState(false);
@@ -246,10 +341,18 @@ export function CreateWatchlistDialog({
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<QuoteResult[]>([]);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+
   const debouncedSearch = useDebouncedValue(search, 500);
 
-  const form = useForm<CreateWatchlistFormValues>({
-    resolver: zodResolver(createWatchlistSchema),
+  const dialogTitle = isEditMode ? "Edit watchlist" : "Create watchlist";
+  const dialogDescription = isEditMode
+    ? "Update your watchlist details, tags, items, quantities, notes, and order."
+    : "Build your watchlist first, then optionally seed it with curated stocks or funds.";
+  const submitLabel = isEditMode ? "Save changes" : "Create watchlist";
+  const submittingLabel = isEditMode ? "Saving..." : "Creating...";
+
+  const form = useForm<WatchlistDialogFormValues>({
+    resolver: zodResolver(watchlistDialogSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -266,23 +369,26 @@ export function CreateWatchlistDialog({
   const selectedSeedItems = form.watch("seedItems");
   const quantityType = form.watch("quantityType");
 
-  function resetDialogState() {
-    const dedupedSeedInputs = dedupeInitialSeedItems(initialSeedItems);
+  function getFormDefaults(): WatchlistDialogFormValues {
+    if (isEditMode && watchlist) {
+      const editSeedItems = watchlist.items?.map(watchlistItemToSeedItem) ?? [];
 
+      return {
+        name: watchlist.name ?? "",
+        description: watchlist.description ?? "",
+        tags: watchlist.tags?.map((tag: any) => tag.name) ?? [],
+        visibility: getWatchlistVisibility(watchlist),
+        quantityType: getWatchlistAllocationType(watchlist),
+        isDefault: getWatchlistIsDefault(watchlist),
+        assetType: "equity",
+        seedItems: editSeedItems,
+      };
+    }
+
+    const dedupedSeedInputs = dedupeInitialSeedItems(initialSeedItems);
     const seededItems = dedupedSeedInputs.map(toSeedItem);
 
-    const seededInputValues = Object.fromEntries(
-      dedupedSeedInputs.map((item) => [item.symbol, ""]),
-    );
-
-    setStep(startAtStep);
-    setSearch("");
-    setSearchResults([]);
-    setSearchLoading(false);
-    setCuratedItems([]);
-    setInputValues(seededInputValues);
-
-    form.reset({
+    return {
       name: "",
       description: "",
       visibility: "",
@@ -291,7 +397,29 @@ export function CreateWatchlistDialog({
       assetType: "equity",
       seedItems: seededItems,
       tags: [],
-    });
+    };
+  }
+
+  function resetDialogState() {
+    const defaults = getFormDefaults();
+
+    const seededInputValues = Object.fromEntries(
+      defaults.seedItems.map((item) => [
+        item.symbol,
+        item.quantity === null || item.quantity === undefined
+          ? ""
+          : String(item.quantity),
+      ]),
+    );
+
+    setStep(isEditMode ? 1 : startAtStep);
+    setSearch("");
+    setSearchResults([]);
+    setSearchLoading(false);
+    setCuratedItems([]);
+    setInputValues(seededInputValues);
+
+    form.reset(defaults);
   }
 
   useEffect(() => {
@@ -387,7 +515,8 @@ export function CreateWatchlistDialog({
   useEffect(() => {
     if (!open) return;
     resetDialogState();
-  }, [open, startAtStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, startAtStep, mode, watchlist?.id]);
 
   const normalizedCuratedItems = useMemo(
     () => curatedItems.map(screenerTickerInfoToWatchlistRowItem),
@@ -407,7 +536,9 @@ export function CreateWatchlistDialog({
 
   function handleToggleSeedItem(item: WatchlistRowItem) {
     const current = form.getValues("seedItems");
-    const exists = current.some((x) => x.symbol === item.symbol);
+    const exists = current.some(
+      (x) => x.symbol.toUpperCase() === item.symbol.toUpperCase(),
+    );
 
     if (exists) {
       setInputValues((prev) => {
@@ -418,7 +549,9 @@ export function CreateWatchlistDialog({
 
       form.setValue(
         "seedItems",
-        current.filter((x) => x.symbol !== item.symbol),
+        current.filter(
+          (x) => x.symbol.toUpperCase() !== item.symbol.toUpperCase(),
+        ),
         { shouldDirty: true, shouldValidate: true },
       );
 
@@ -437,6 +570,7 @@ export function CreateWatchlistDialog({
       regularMarketPrice: item.marketPrice ?? null,
       regularMarketPreviousClose: null,
       regularMarketChange: item.marketChange ?? null,
+      regularMarketChangePercent: item.marketChangePercent ?? null,
       quantity: quantityType === QUANTITY_TYPE_PERCENTAGE ? 0 : 1,
       note: "",
     };
@@ -508,6 +642,7 @@ export function CreateWatchlistDialog({
       "visibility",
       "quantityType",
       "isDefault",
+      "tags",
     ]);
 
     if (!valid) return;
@@ -533,12 +668,14 @@ export function CreateWatchlistDialog({
     }
   }
 
-  async function onSubmit(values: CreateWatchlistFormValues) {
+  async function onSubmit(values: WatchlistDialogFormValues) {
     startSubmitting(async () => {
-      const toastId = toast.loading("Creating watchlist...");
+      const toastId = toast.loading(
+        isEditMode ? "Updating watchlist..." : "Creating watchlist...",
+      );
 
       try {
-        const payload: WatchlistDetailCreatePayload = {
+        const payload = {
           watchlist_data: {
             name: values.name.trim(),
             description: values.description?.trim() || null,
@@ -548,6 +685,7 @@ export function CreateWatchlistDialog({
           },
           tags: values.tags,
           items: values.seedItems.map((item, index) => ({
+            ...(item.id ? { id: item.id } : {}),
             symbol: item.symbol,
             exchange: item.exchange ?? "",
             note: item.note?.trim() || null,
@@ -560,14 +698,35 @@ export function CreateWatchlistDialog({
           })),
         };
 
-        await createWatchlistClient(payload);
+        if (isEditMode) {
+          if (!watchlist?.id) {
+            throw new Error("Missing watchlist id for update.");
+          }
 
-        toast.success("Watchlist created successfully.", { id: toastId });
+          await updateWatchlistClient(watchlist.id, payload);
+        } else {
+          await createWatchlistClient(payload);
+        }
+
+        toast.success(
+          isEditMode
+            ? "Watchlist updated successfully."
+            : "Watchlist created successfully.",
+          { id: toastId },
+        );
+
+        await onSuccess?.();
+
         resetDialogState();
         setOpen(false);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to create watchlist.", { id: toastId });
+        toast.error(
+          isEditMode
+            ? "Failed to update watchlist."
+            : "Failed to create watchlist.",
+          { id: toastId },
+        );
       }
     });
   }
@@ -605,16 +764,18 @@ export function CreateWatchlistDialog({
       currency: selectedItem.currency ?? null,
       marketPrice: selectedItem.regularMarketPrice ?? null,
       marketChange: selectedItem.regularMarketChange ?? null,
-      marketChangePercent: null,
+      marketChangePercent: selectedItem.regularMarketChangePercent ?? null,
     }));
   }, [selectedSeedItems]);
 
   const suggestedItems = useMemo(() => {
     const selectedSymbols = new Set(
-      selectedSeedItems.map((item) => item.symbol),
+      selectedSeedItems.map((item) => item.symbol.toUpperCase()),
     );
 
-    return displayItems.filter((item) => !selectedSymbols.has(item.symbol));
+    return displayItems.filter(
+      (item) => !selectedSymbols.has(item.symbol.toUpperCase()),
+    );
   }, [displayItems, selectedSeedItems]);
 
   const totalQuantity = useMemo(() => {
@@ -630,30 +791,42 @@ export function CreateWatchlistDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {isIconOnly ? (
-          <Button variant="ghost" size="icon" aria-label="Create watchlist">
-            <Star className="h-5 w-5" />
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            className="rounded-xl px-4"
-            aria-label="Create watchlist"
-          >
-            <Star className="h-5 w-5" />
-            <span className="ml-2">Create watchlist</span>
-          </Button>
-        )}
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            {trigger ? (
+              trigger
+            ) : isIconOnly ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isEditMode ? "Edit watchlist" : "Create watchlist"}
+              >
+                <Binoculars className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="rounded-xl px-4"
+                aria-label={isEditMode ? "Edit watchlist" : "Create watchlist"}
+              >
+                <Binoculars className="h-5 w-5" />
+                <span className="ml-2">
+                  {isEditMode ? "Edit watchlist" : "Create watchlist"}
+                </span>
+              </Button>
+            )}
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          {isEditMode ? "Edit this watchlist" : "Create a new watchlist"}
+        </TooltipContent>
+      </Tooltip>
 
       <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Create watchlist</DialogTitle>
-          <DialogDescription>
-            Build your watchlist first, then optionally seed it with curated
-            stocks or funds.
-          </DialogDescription>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
 
         <Separator />
@@ -663,11 +836,11 @@ export function CreateWatchlistDialog({
             <div className="grid gap-5 pb-5">
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="name">
+                  <FieldLabel htmlFor="watchlist-name">
                     Name <span className="text-red-500">*</span>
                   </FieldLabel>
                   <Input
-                    id="name"
+                    id="watchlist-name"
                     placeholder="e.g. AI Compounders"
                     {...form.register("name")}
                   />
@@ -679,9 +852,11 @@ export function CreateWatchlistDialog({
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="description">Description</FieldLabel>
+                  <FieldLabel htmlFor="watchlist-description">
+                    Description
+                  </FieldLabel>
                   <Textarea
-                    id="description"
+                    id="watchlist-description"
                     placeholder="What is this watchlist for?"
                     className="min-h-28 resize-none"
                     maxLength={2000}
@@ -696,6 +871,7 @@ export function CreateWatchlistDialog({
                     </FieldError>
                   )}
                 </Field>
+
                 <Field>
                   <FieldLabel>Tags</FieldLabel>
                   <TagInput
@@ -717,7 +893,7 @@ export function CreateWatchlistDialog({
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <Field>
-                    <FieldLabel htmlFor="visibility">
+                    <FieldLabel htmlFor="watchlist-visibility">
                       Visibility <span className="text-red-500">*</span>
                     </FieldLabel>
                     <Controller
@@ -729,7 +905,10 @@ export function CreateWatchlistDialog({
                           onValueChange={field.onChange}
                           disabled={metaLoading}
                         >
-                          <SelectTrigger id="visibility" className="w-full">
+                          <SelectTrigger
+                            id="watchlist-visibility"
+                            className="w-full"
+                          >
                             {metaLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                             ) : (
@@ -754,7 +933,7 @@ export function CreateWatchlistDialog({
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="quantityType">
+                    <FieldLabel htmlFor="watchlist-quantity-type">
                       Quantity type <span className="text-red-500">*</span>
                     </FieldLabel>
                     <Controller
@@ -766,11 +945,14 @@ export function CreateWatchlistDialog({
                           onValueChange={field.onChange}
                           disabled={metaLoading}
                         >
-                          <SelectTrigger id="quantityType" className="w-full">
+                          <SelectTrigger
+                            id="watchlist-quantity-type"
+                            className="w-full"
+                          >
                             {metaLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                             ) : (
-                              <SelectValue placeholder="Select visibility" />
+                              <SelectValue placeholder="Select quantity type" />
                             )}
                           </SelectTrigger>
                           <SelectContent>
@@ -846,7 +1028,10 @@ export function CreateWatchlistDialog({
                             void handleCategoryChange(value);
                           }}
                         >
-                          <SelectTrigger id="assetType" className="w-full">
+                          <SelectTrigger
+                            id="watchlist-asset-type"
+                            className="w-full"
+                          >
                             <SelectValue placeholder="Asset type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1030,10 +1215,10 @@ export function CreateWatchlistDialog({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      {submittingLabel}
                     </>
                   ) : (
-                    "Create watchlist"
+                    submitLabel
                   )}
                 </Button>
               </div>

@@ -16,16 +16,18 @@ import type {
   WatchlistDetailOut,
 } from "@/schemas/watchlist";
 import { WatchlistsTab } from "./watchlists-tab";
+import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
+import { Separator } from "@/components/ui/separator";
 
 type TraderProfileTabsProps = {
   isOwnProfile: boolean;
 };
 
-type WatchlistVisibilityFilter = "public" | "shared" | "private";
+type WatchlistVisibilityFilter = "all" | "public" | "shared" | "private";
 
 export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
   const [watchlistVisibility, setWatchlistVisibility] =
-    useState<WatchlistVisibilityFilter>("public");
+    useState<WatchlistVisibilityFilter>("all");
   const [loading, setLoading] = useState(false);
   const [watchlistsResponse, setWatchlistsResponse] =
     useState<GetMyWatchlistsResponse | null>(null);
@@ -33,13 +35,17 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
   const visibilityOptions = useMemo(() => {
     if (isOwnProfile) {
       return [
+        { label: "All", value: "all" },
         { label: "Public", value: "public" },
         { label: "Shared", value: "shared" },
         { label: "Private", value: "private" },
       ] as const;
     }
 
-    return [{ label: "Public", value: "public" }] as const;
+    return [
+      { label: "All", value: "all" },
+      { label: "Public", value: "public" },
+    ] as const;
   }, [isOwnProfile]);
 
   const tabs = [
@@ -83,6 +89,10 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
   }, [watchlistsResponse]);
 
   const filteredWatchlists = useMemo(() => {
+    if (watchlistVisibility === "all") {
+      return allWatchlists;
+    }
+
     return allWatchlists.filter(
       (watchlist) => watchlist.visibility === watchlistVisibility,
     );
@@ -110,14 +120,14 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
           ))}
         </div>
 
-        <div className="w-full md:w-55">
+        <div className="flex gap-3">
           <Select
             value={watchlistVisibility}
             onValueChange={(value) =>
               setWatchlistVisibility(value as WatchlistVisibilityFilter)
             }
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full md:w-32">
               <SelectValue placeholder="Filter watchlists" />
             </SelectTrigger>
 
@@ -129,12 +139,19 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
               ))}
             </SelectContent>
           </Select>
+          {isOwnProfile && (
+            <Separator
+              orientation="vertical"
+              className="ml-3 h-6 self-center!"
+            />
+          )}
+          {isOwnProfile && <WatchlistDialog isIconOnly={true} mode="create" />}
         </div>
       </div>
 
       <p className="px-1 pt-3 text-xs text-muted-foreground">
         {isOwnProfile
-          ? "Filter your watchlists by Public, Shared, or Private. Posts and Activity are coming later."
+          ? "Filter your watchlists by All, Public, Shared, or Private. Posts and Activity are coming later."
           : "You can currently view public watchlists here. Posts and Activity are coming later."}
       </p>
 
