@@ -46,7 +46,7 @@ export function WatchlistDetailsDialog({
 
       <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
         <DialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <DialogTitle>{watchlist.name}</DialogTitle>
             <Badge variant="outline" className="gap-1 rounded-full">
               {getVisibilityIcon(watchlist.visibility)}
@@ -69,6 +69,13 @@ export function WatchlistDetailsDialog({
 
         <Separator />
 
+        <div className="text-sm text-muted-foreground">
+          {watchlist.items?.length
+            ? `${watchlist.items.length} item${
+                watchlist.items.length > 1 ? "s" : ""
+              }`
+            : "No items in this watchlist."}
+        </div>
         <ScrollArea className="max-h-112 pr-3">
           <div className="space-y-3">
             {watchlist.items?.length ? (

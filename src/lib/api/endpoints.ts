@@ -49,7 +49,7 @@ export const Endpoints = {
   FavouriteStocks: {
     BaseVersion: "v1",
     Base: "/favourite-stocks",
-    ById: (id: number) => `/${id}`,
+    Delete: (id: number) => `/${id}`,
   },
   Yfinance: {
     BaseVersion: "v1",

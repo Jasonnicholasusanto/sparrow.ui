@@ -5,8 +5,13 @@ import { Globe, Lock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WatchlistDetailOut } from "@/schemas/watchlist";
-import { WatchlistDetailsDialog } from "./watchlist-details-dialog";
 import { environment } from "@/lib/utils/env";
+import { WatchlistDetailsDialog } from "./watchlist-details-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type WatchlistCardProps = {
   watchlist: WatchlistDetailOut;
@@ -28,7 +33,7 @@ function getVisibilityIcon(visibility: string) {
 
 function TickerAvatarGroup({
   tickers,
-  maxVisible = 6,
+  maxVisible = 7,
 }: {
   tickers: WatchlistTickerPreview[];
   maxVisible?: number;
@@ -43,12 +48,20 @@ function TickerAvatarGroup({
 
         return (
           <div key={`${ticker.symbol}-${index}`} className="-ml-2 first:ml-0">
-            <Avatar className="h-8 w-8 border-2 border-background">
-              <AvatarImage src={logoUrl} alt={`${ticker.symbol} logo`} />
-              <AvatarFallback className="text-[10px] font-medium">
-                {ticker.symbol.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Avatar className="h-8 w-8 border-2 border-background cursor-pointer">
+                  <AvatarImage src={logoUrl} alt={`${ticker.symbol} logo`} />
+                  <AvatarFallback className="text-[10px] font-medium">
+                    {ticker.symbol.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+
+              <TooltipContent>
+                <p>{ticker.symbol}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         );
       })}

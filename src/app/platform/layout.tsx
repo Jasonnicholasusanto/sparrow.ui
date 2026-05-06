@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
-import PlatformShell from "./layout-shell";
+import PlatformShell from "./platform-shell";
 import { getUserProfile } from "@/lib/data/server/me";
-import UserProvider from "@/providers/user-provider";
 import { getAuthUser } from "@/lib/data/server/auth";
-import { User } from "@supabase/supabase-js";
 import FadeContent from "@/components/fade-content";
-import { NavbarRoute } from "@/schemas/navbarRoute";
 import { getNavbarRoutes } from "@/lib/data/server/navbarRoutes";
-import HeaderProvider from "@/providers/header-provider";
+import { getMyWatchlists } from "@/lib/data/server/watchlist";
+import { PlatformProviders } from "@/providers/platform-providers";
 
 type PlatformLayoutProps = {
   children: ReactNode;
@@ -16,17 +14,23 @@ type PlatformLayoutProps = {
 export default async function PlatformLayout({
   children,
 }: PlatformLayoutProps) {
-  const user = await getUserProfile();
-  const authUser: User | null = await getAuthUser();
-  const navbarRoutes: NavbarRoute[] | null = await getNavbarRoutes();
+  const [user, authUser, navbarRoutes, watchlistsResponse] = await Promise.all([
+    getUserProfile(),
+    getAuthUser(),
+    getNavbarRoutes(),
+    getMyWatchlists(),
+  ]);
 
   return (
-    <FadeContent blur={true} duration={3000} initialOpacity={0}>
-      <UserProvider user={user} authUser={authUser}>
-        <HeaderProvider navbarRoutes={navbarRoutes ?? []}>
-          <PlatformShell>{children}</PlatformShell>
-        </HeaderProvider>
-      </UserProvider>
+    <FadeContent blur={true} duration={2000} initialOpacity={0}>
+      <PlatformProviders
+        user={user}
+        authUser={authUser}
+        navbarRoutes={navbarRoutes ?? []}
+        watchlistsResponse={watchlistsResponse}
+      >
+        <PlatformShell>{children}</PlatformShell>
+      </PlatformProviders>
     </FadeContent>
   );
 }

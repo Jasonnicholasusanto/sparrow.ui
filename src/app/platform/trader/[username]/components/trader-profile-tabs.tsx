@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -10,14 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getMyWatchlistsClient } from "@/lib/data/client/watchlist";
-import type {
-  GetMyWatchlistsResponse,
-  WatchlistDetailOut,
-} from "@/schemas/watchlist";
 import { WatchlistsTab } from "./watchlists-tab";
-import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
-import { Separator } from "@/components/ui/separator";
+import { useWatchlists } from "@/providers/watchlist-provider";
 
 type TraderProfileTabsProps = {
   isOwnProfile: boolean;
@@ -28,9 +21,12 @@ type WatchlistVisibilityFilter = "all" | "public" | "shared" | "private";
 export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
   const [watchlistVisibility, setWatchlistVisibility] =
     useState<WatchlistVisibilityFilter>("all");
-  const [loading, setLoading] = useState(false);
-  const [watchlistsResponse, setWatchlistsResponse] =
-    useState<GetMyWatchlistsResponse | null>(null);
+
+  const {
+    watchlists: allWatchlists,
+    loading,
+    refreshWatchlists,
+  } = useWatchlists();
 
   const visibilityOptions = useMemo(() => {
     if (isOwnProfile) {
@@ -53,40 +49,6 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
     { label: "Posts", active: false, disabled: true },
     { label: "Activity", active: false, disabled: true },
   ] as const;
-
-  async function loadWatchlists() {
-    try {
-      setLoading(true);
-      const res = await getMyWatchlistsClient();
-      setWatchlistsResponse(res);
-    } catch (error) {
-      console.error(error);
-      setWatchlistsResponse(null);
-      toast.error("Failed to load watchlists");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadWatchlists();
-  }, []);
-
-  const allWatchlists = useMemo(() => {
-    const grouped = watchlistsResponse?.results;
-    if (!grouped) return [];
-
-    const merged = [
-      ...(grouped.created ?? []),
-      ...(grouped.forked ?? []),
-      ...(grouped.shared ?? []),
-      ...(grouped.bookmarked ?? []),
-    ];
-
-    return Array.from(
-      new Map(merged.map((watchlist) => [watchlist.id, watchlist])).values(),
-    ) as WatchlistDetailOut[];
-  }, [watchlistsResponse]);
 
   const filteredWatchlists = useMemo(() => {
     if (watchlistVisibility === "all") {
@@ -120,14 +82,14 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
           ))}
         </div>
 
-        <div className="flex gap-3">
+        <div className="w-full md:w-55">
           <Select
             value={watchlistVisibility}
             onValueChange={(value) =>
               setWatchlistVisibility(value as WatchlistVisibilityFilter)
             }
           >
-            <SelectTrigger className="w-full md:w-32">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Filter watchlists" />
             </SelectTrigger>
 
@@ -139,13 +101,6 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
               ))}
             </SelectContent>
           </Select>
-          {isOwnProfile && (
-            <Separator
-              orientation="vertical"
-              className="ml-3 h-6 self-center!"
-            />
-          )}
-          {isOwnProfile && <WatchlistDialog isIconOnly={true} mode="create" />}
         </div>
       </div>
 
@@ -160,7 +115,7 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
           watchlists={filteredWatchlists}
           loading={loading}
           isOwnProfile={isOwnProfile}
-          onRefresh={loadWatchlists}
+          onRefresh={refreshWatchlists}
         />
       </div>
     </section>

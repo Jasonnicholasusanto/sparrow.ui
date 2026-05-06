@@ -15,6 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { WatchlistItemOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type WatchlistDetailsItemCardProps = {
   item: WatchlistItemOut;
@@ -54,6 +59,23 @@ function formatChange(value?: number | null) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
 }
 
+function MetricCell({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className="min-w-0 text-right">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`truncate font-medium ${className ?? ""}`}>{value}</p>
+    </div>
+  );
+}
+
 export function WatchlistDetailsItemCard({
   item,
 }: WatchlistDetailsItemCardProps) {
@@ -69,21 +91,23 @@ export function WatchlistDetailsItemCard({
   const regularMarketChangePercent =
     tickerDetails?.regularMarketChangePercent ?? null;
 
-  const isPositive =
-    regularMarketChange !== null &&
-    regularMarketChange !== undefined &&
-    regularMarketChange >= 0;
+  const hasChange =
+    regularMarketChange !== null && regularMarketChange !== undefined;
 
-  const changeClassName = isPositive
-    ? "text-emerald-600 dark:text-emerald-400"
-    : "text-red-600 dark:text-red-400";
+  const isPositive = hasChange && regularMarketChange >= 0;
+
+  const changeClassName = !hasChange
+    ? "text-muted-foreground"
+    : isPositive
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-red-600 dark:text-red-400";
 
   function handleNavigate() {
     router.push(`/platform/ticker/${item.symbol}`);
   }
 
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm transition-colors hover:bg-muted/40">
+    <div className="grid grid-cols-[1fr_auto] items-center gap-5 rounded-xl border bg-card px-4 py-3 text-sm transition-colors hover:bg-muted/40">
       <div
         role="button"
         tabIndex={0}
@@ -94,67 +118,67 @@ export function WatchlistDetailsItemCard({
             handleNavigate();
           }
         }}
-        className="grid cursor-pointer grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-4"
+        className="grid cursor-pointer grid-cols-6 items-center gap-4"
       >
-        <Avatar className="h-10 w-10 rounded-xl border bg-background">
-          <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
-          <AvatarFallback className="rounded-xl text-xs font-semibold">
-            {item.symbol.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <div className="flex flex-row gap-3 w-lg">
+          <Avatar className="h-10 w-10 rounded-xl border bg-background">
+            <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
+            <AvatarFallback className="rounded-xl text-xs font-semibold">
+              {item.symbol.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
-        <div className="min-w-0">
-          <p className="truncate font-semibold">{item.symbol}</p>
-          {item.exchange ? (
-            <p className="truncate text-xs text-muted-foreground">
-              {item.exchange}
-            </p>
-          ) : null}
+          <div className="min-w-0">
+            <p className="truncate font-semibold">{item.symbol}</p>
+            {item.exchange ? (
+              <p className="truncate text-xs text-muted-foreground">
+                {item.exchange}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Currency</p>
-          <p className="font-medium">{currency ?? "—"}</p>
-        </div>
+        <MetricCell label="Currency" value={currency ?? "—"} />
 
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Quantity</p>
-          <p className="font-medium">{formatNumber(item.quantity)}</p>
-        </div>
+        <MetricCell label="Quantity" value={formatNumber(item.quantity)} />
 
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Last price</p>
-          <p className="font-medium">{formatCurrency(lastPrice, currency)}</p>
-        </div>
+        <MetricCell
+          label="Last price"
+          value={formatCurrency(lastPrice, currency)}
+        />
 
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Change</p>
-          <p className={`font-medium ${changeClassName}`}>
-            {formatChange(regularMarketChange)}
-          </p>
-        </div>
+        <MetricCell
+          label="Change"
+          value={formatChange(regularMarketChange)}
+          className={changeClassName}
+        />
 
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Change %</p>
-          <p className={`font-medium ${changeClassName}`}>
-            {formatPercent(regularMarketChangePercent)}
-          </p>
-        </div>
+        <MetricCell
+          label="Change %"
+          value={formatPercent(regularMarketChangePercent)}
+          className={changeClassName}
+        />
       </div>
 
       <Dialog>
-        <DialogTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-          >
-            <NotepadText className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                aria-label={`View ${item.symbol} note`}
+              >
+                <NotepadText className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Notes</TooltipContent>
+        </Tooltip>
 
-        <DialogContent>
+        <DialogContent className="min-w-lg">
           <DialogHeader>
             <DialogTitle>{item.symbol} note</DialogTitle>
             <DialogDescription>
