@@ -2,12 +2,15 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
+
 import type { FavouriteStockResponse } from "@/schemas/favouriteStock";
 import {
   addFavouriteStock,
@@ -20,6 +23,7 @@ import {
 type FavouriteStocksContextValue = {
   favouriteStocks: FavouriteStockResponse[];
   loading: boolean;
+  hasLoaded: boolean;
   refreshFavouriteStocks: () => Promise<void>;
   addFavourite: (
     symbol: string,
@@ -49,19 +53,27 @@ export function FavouriteStocksProvider({
   >(initialFavouriteStocks);
 
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(initialFavouriteStocks.length > 0);
 
-  async function refreshFavouriteStocks() {
+  const refreshFavouriteStocks = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchFavouriteStocks();
       setFavouriteStocks(data ?? []);
+      setHasLoaded(true);
     } catch (error) {
       console.error(error);
       toast.error("Failed to refresh favourite stocks");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoaded) {
+      void refreshFavouriteStocks();
+    }
+  }, [hasLoaded, refreshFavouriteStocks]);
 
   async function addFavourite(
     symbol: string,
@@ -79,12 +91,15 @@ export function FavouriteStocksProvider({
 
       return [created, ...prev];
     });
+
+    setHasLoaded(true);
   }
 
   async function deleteFavourite(id: number) {
     await deleteFavouriteStock(id);
 
     setFavouriteStocks((prev) => prev.filter((stock) => stock.id !== id));
+    setHasLoaded(true);
   }
 
   async function updateFavourite(id: number, note: string | null) {
@@ -93,23 +108,30 @@ export function FavouriteStocksProvider({
     setFavouriteStocks((prev) =>
       prev.map((stock) => (stock.id === id ? updated : stock)),
     );
+
+    setHasLoaded(true);
   }
 
   async function clearFavourites() {
     await clearFavouriteStocks();
     setFavouriteStocks([]);
+    setHasLoaded(true);
   }
 
-  function isFavourite(symbol: string) {
-    return favouriteStocks.some(
-      (stock) => stock.symbol.toUpperCase() === symbol.toUpperCase(),
-    );
-  }
+  const isFavourite = useCallback(
+    (symbol: string) => {
+      return favouriteStocks.some(
+        (stock) => stock.symbol.toUpperCase() === symbol.toUpperCase(),
+      );
+    },
+    [favouriteStocks],
+  );
 
   const value = useMemo(
     () => ({
       favouriteStocks,
       loading,
+      hasLoaded,
       refreshFavouriteStocks,
       addFavourite,
       deleteFavourite,
@@ -117,7 +139,7 @@ export function FavouriteStocksProvider({
       clearFavourites,
       isFavourite,
     }),
-    [favouriteStocks, loading],
+    [favouriteStocks, loading, hasLoaded, refreshFavouriteStocks, isFavourite],
   );
 
   return (

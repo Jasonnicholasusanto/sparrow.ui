@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,9 @@ import { getStockHistoryClient } from "@/lib/data/client/stock";
 import SyncedStockCharts from "./synced-charts";
 import { Spinner } from "@/components/ui/spinner";
 import AddToWatchlistDialog from "./add-to-watchlist-dialog";
+import { useFavouriteStocks } from "@/providers/favourite-stocks-provider";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface StockChartProps {
   stock: StockInfoResponse;
@@ -33,6 +36,50 @@ export default function StockChartBody({ stock }: StockChartProps) {
   const [chartType, setChartType] = useState<"line" | "candle">("line");
   const [interval, setInterval] = useState("30m");
   const [period, setPeriod] = useState("1mo");
+
+  const { favouriteStocks, addFavourite, deleteFavourite } =
+    useFavouriteStocks();
+
+  const [isFavouritePending, startFavouriteTransition] = useTransition();
+
+  const favouriteStock = useMemo(() => {
+    return favouriteStocks.find(
+      (item) => item.symbol.toUpperCase() === stock.symbol.toUpperCase(),
+    );
+  }, [favouriteStocks, stock.symbol]);
+
+  const isFavourite = Boolean(favouriteStock);
+
+  function handleToggleFavourite() {
+    startFavouriteTransition(async () => {
+      try {
+        if (favouriteStock) {
+          await deleteFavourite(favouriteStock.id);
+          toast.success(`${stock.symbol} removed from favourites`);
+          return;
+        }
+
+        const exchange = stock.exchange || stock.market;
+
+        if (!exchange) {
+          toast.error(
+            "Unable to add favourite stock because exchange is missing.",
+          );
+          return;
+        }
+
+        await addFavourite(stock.symbol, exchange, null);
+        toast.success(`${stock.symbol} added to favourites`);
+      } catch (error) {
+        console.error(error);
+        toast.error(
+          isFavourite
+            ? "Failed to remove stock from favourites"
+            : "Failed to add stock to favourites",
+        );
+      }
+    });
+  }
 
   async function fetchHistory() {
     setLoading(true);
@@ -152,11 +199,27 @@ export default function StockChartBody({ stock }: StockChartProps) {
           </Tooltip>
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>
-              <Button variant="secondary" className="rounded-xl p-2">
-                <LuHeart />
+              <Button
+                type="button"
+                variant={isFavourite ? "default" : "secondary"}
+                className="rounded-xl p-2"
+                aria-pressed={isFavourite}
+                disabled={isFavouritePending}
+                onClick={handleToggleFavourite}
+              >
+                {isFavouritePending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LuHeart
+                    className={cn("h-4 w-4", isFavourite && "fill-current")}
+                  />
+                )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Add to favourites</TooltipContent>
+
+            <TooltipContent side="bottom">
+              {isFavourite ? "Remove from favourites" : "Add to favourites"}
+            </TooltipContent>
           </Tooltip>
         </div>
         <div className="flex flex-end justify-end items-center">

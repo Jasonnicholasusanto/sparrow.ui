@@ -6,12 +6,12 @@ export interface FavouriteStockResponse {
   createdAt: string;
   updatedAt: string;
   tickerDetails: {
-    last_price: number | null;
+    lastPrice: number | null;
     currency: string | null;
     volume: number | null;
-    previous_close: number | null;
-    regular_market_change: number | null;
-    regular_market_change_percent: number | null;
+    previousClose: number | null;
+    regularMarketChange: number | null;
+    regularMarketChangePercent: number | null;
   };
 }
 
