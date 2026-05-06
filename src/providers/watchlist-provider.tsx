@@ -2,7 +2,9 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -19,6 +21,7 @@ type WatchlistContextValue = {
   watchlistsResponse: GetMyWatchlistsResponse | null;
   watchlists: WatchlistDetailOut[];
   loading: boolean;
+  hasLoaded: boolean;
   refreshWatchlists: () => Promise<void>;
   setWatchlistsResponse: React.Dispatch<
     React.SetStateAction<GetMyWatchlistsResponse | null>
@@ -29,20 +32,47 @@ const WatchlistContext = createContext<WatchlistContextValue | null>(null);
 
 type WatchlistProviderProps = {
   children: ReactNode;
-  initialWatchlistsResponse: GetMyWatchlistsResponse | null;
+  initialWatchlistsResponse?: GetMyWatchlistsResponse | null;
 };
 
 export default function WatchlistProvider({
   children,
-  initialWatchlistsResponse,
+  initialWatchlistsResponse = null,
 }: WatchlistProviderProps) {
   const [watchlistsResponse, setWatchlistsResponse] =
     useState<GetMyWatchlistsResponse | null>(initialWatchlistsResponse);
 
   const [loading, setLoading] = useState(false);
 
+  const [hasLoaded, setHasLoaded] = useState(
+    initialWatchlistsResponse !== null,
+  );
+
+  const refreshWatchlists = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const res = await getMyWatchlistsClient();
+
+      setWatchlistsResponse(res);
+      setHasLoaded(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to refresh watchlists");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoaded) {
+      void refreshWatchlists();
+    }
+  }, [hasLoaded, refreshWatchlists]);
+
   const watchlists = useMemo(() => {
     const grouped = watchlistsResponse?.results;
+
     if (!grouped) return [];
 
     const merged = [
@@ -57,28 +87,23 @@ export default function WatchlistProvider({
     ) as WatchlistDetailOut[];
   }, [watchlistsResponse]);
 
-  async function refreshWatchlists() {
-    try {
-      setLoading(true);
-      const res = await getMyWatchlistsClient();
-      setWatchlistsResponse(res);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to refresh watchlists");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const value = useMemo(
     () => ({
       watchlistsResponse,
       watchlists,
       loading,
+      hasLoaded,
       refreshWatchlists,
       setWatchlistsResponse,
     }),
-    [watchlistsResponse, watchlists, loading],
+    [
+      watchlistsResponse,
+      watchlists,
+      loading,
+      hasLoaded,
+      refreshWatchlists,
+      setWatchlistsResponse,
+    ],
   );
 
   return (
