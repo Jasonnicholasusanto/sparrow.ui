@@ -1,13 +1,27 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  ListPlus,
+  Loader2,
+  SquareArrowOutUpRight,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { environment } from "@/lib/utils/env";
 import type { FavouriteStockResponse } from "@/schemas/favouriteStock";
 import { cn } from "@/lib/utils";
+import { AddToWatchlistDialog } from "@/app/platform/ticker/[ticker]/components/add-to-watchlist-dialog";
 
 type SidebarFavouriteStockCardProps = {
   stock: FavouriteStockResponse;
@@ -48,18 +62,6 @@ function getChangePercent(stock: FavouriteStockResponse): number | null {
     tickerDetails?.regularMarketChangePercent ??
     tickerDetails?.regular_market_change_percent ??
     null
-  );
-}
-
-function getMarket(stock: FavouriteStockResponse): string {
-  const tickerDetails = getTickerDetails(stock);
-
-  return (
-    stock.exchange ??
-    (stock as any).market ??
-    tickerDetails?.exchange ??
-    tickerDetails?.market ??
-    "—"
   );
 }
 
@@ -106,7 +108,6 @@ export function SidebarFavouriteStockCard({
 
   const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
 
-  const market = getMarket(stock);
   const currency = getCurrency(stock);
   const lastPrice = getLastPrice(stock);
   const change = getChange(stock);
@@ -125,50 +126,44 @@ export function SidebarFavouriteStockCard({
     router.push(`/platform/ticker/${stock.symbol}`);
   }
 
-  async function handleRemove(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
+  async function handleRemove() {
     await onRemove(stock.id);
   }
 
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-2xl px-3 py-3 transition-colors hover:bg-muted/50">
-      <button
-        type="button"
-        onClick={handleNavigate}
-        className="grid min-w-0 grid-cols-[auto_minmax(4.5rem,1fr)_minmax(4.5rem,0.8fr)_minmax(4rem,0.7fr)_minmax(4rem,0.7fr)] items-center gap-3 text-left"
-      >
-        <Avatar className="h-8 w-8 rounded-xl border bg-background">
-          <AvatarImage src={logoUrl} alt={`${stock.symbol} logo`} />
-          <AvatarFallback className="rounded-xl text-[10px] font-semibold">
-            {stock.symbol.slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <button
+          type="button"
+          onClick={handleNavigate}
+          className="grid w-full min-w-0 grid-cols-[minmax(6rem,1fr)_minmax(4.5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)] items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-muted/50"
+        >
+          <div className="flex flex-row min-w-0 items-center gap-2">
+            <Avatar className="h-7 w-7 rounded-xl border bg-background">
+              <AvatarImage src={logoUrl} alt={`${stock.symbol} logo`} />
+              <AvatarFallback className="rounded-xl text-[10px] font-semibold">
+                {stock.symbol.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium">{stock.symbol}</div>
-          <div className="truncate text-xs text-muted-foreground">{market}</div>
-        </div>
-
-        <div className="min-w-0 text-right">
-          <div className="truncate text-[10px] text-muted-foreground">Last</div>
-          <div className="truncate text-sm font-medium">
-            {formatPrice(lastPrice, currency)}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-bold">{stock.symbol}</div>
+            </div>
           </div>
-        </div>
 
-        <div className="min-w-0 text-right">
-          <div className="truncate text-[10px] text-muted-foreground">Chg</div>
-          <div className={cn("truncate text-xs font-medium", changeClassName)}>
+          <div className="truncate text-right text-xs font-medium">
+            {lastPrice?.toFixed(2) ?? "—"}
+          </div>
+
+          <div
+            className={cn(
+              "truncate text-right text-xs font-medium",
+              changeClassName,
+            )}
+          >
             {formatChange(change)}
           </div>
-        </div>
 
-        <div className="min-w-0 text-right">
-          <div className="truncate text-[10px] text-muted-foreground">
-            Chg %
-          </div>
           <div
             className={cn(
               "flex items-center justify-end gap-1 truncate text-xs font-medium",
@@ -182,26 +177,63 @@ export function SidebarFavouriteStockCard({
                 <TrendingDown className="h-3 w-3 shrink-0" />
               )
             ) : null}
+
             <span className="truncate">{formatPercent(changePercent)}</span>
           </div>
-        </div>
-      </button>
+        </button>
+      </ContextMenuTrigger>
 
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
-        disabled={isRemoving}
-        onClick={handleRemove}
-        aria-label={`Remove ${stock.symbol} from favourites`}
-      >
-        {isRemoving ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Trash2 className="h-4 w-4" />
-        )}
-      </Button>
-    </div>
+      <ContextMenuContent className="w-52">
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={handleNavigate}>
+            <span className="flex items-center gap-2 text-xs">
+              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+              View {stock.symbol}
+            </span>
+          </ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuGroup>
+          <AddToWatchlistDialog
+            stock={{
+              symbol: stock.symbol,
+              market: stock.exchange,
+              currency: stock.tickerDetails?.currency,
+            }}
+            trigger={
+              <ContextMenuItem
+                onSelect={(event) => {
+                  event.preventDefault();
+                }}
+              >
+                <ListPlus className="mr-2 h-4 w-4" />
+                Add to watchlist
+              </ContextMenuItem>
+            }
+          />
+        </ContextMenuGroup>
+
+        <ContextMenuSeparator />
+
+        <ContextMenuGroup>
+          <ContextMenuItem
+            variant="destructive"
+            disabled={isRemoving}
+            onClick={(event) => {
+              event.preventDefault();
+              void handleRemove();
+            }}
+          >
+            {isRemoving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Removing...
+              </>
+            ) : (
+              <>Remove from favourites</>
+            )}
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

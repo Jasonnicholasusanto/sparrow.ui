@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { WatchlistDetailOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
-import { WatchlistDetailsDialog } from "./watchlist-details-dialog";
+import { WatchlistDetailsDialog } from "../../../../../components/watchlist/watchlist-details-dialog";
 import {
   Tooltip,
   TooltipContent,

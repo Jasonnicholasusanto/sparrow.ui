@@ -94,6 +94,17 @@ function FavouriteStocksList({
 
   return (
     <div className="space-y-1">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-2 px-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="grid min-w-0 grid-cols-[minmax(6rem,1fr)_minmax(4.5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)] items-center gap-3">
+          <span>Symbol</span>
+          <span className="text-right">Last</span>
+          <span className="text-right">Change</span>
+          <span className="text-right">Change %</span>
+        </div>
+
+        <span className="h-8 w-8" />
+      </div>
+
       {favouriteStocks.map((stock) => (
         <SidebarFavouriteStockCard
           key={stock.id}

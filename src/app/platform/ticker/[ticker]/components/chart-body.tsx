@@ -19,10 +19,10 @@ import { stockDataPeriods } from "@/lib/options/stockDataOptions";
 import { getStockHistoryClient } from "@/lib/data/client/stock";
 import SyncedStockCharts from "./synced-charts";
 import { Spinner } from "@/components/ui/spinner";
-import AddToWatchlistDialog from "./add-to-watchlist-dialog";
 import { useFavouriteStocks } from "@/providers/favourite-stocks-provider";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { AddToWatchlistDialog } from "./add-to-watchlist-dialog";
 
 interface StockChartProps {
   stock: StockInfoResponse;

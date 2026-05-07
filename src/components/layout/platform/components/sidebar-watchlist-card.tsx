@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { WatchlistDetailOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
-import { WatchlistDetailsDialog } from "@/app/platform/trader/[username]/components/watchlist-details-dialog";
+import { WatchlistDetailsDialog } from "@/components/watchlist/watchlist-details-dialog";
 
 type SidebarWatchlistCardProps = {
   watchlist: WatchlistDetailOut;
