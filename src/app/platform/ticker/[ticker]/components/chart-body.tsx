@@ -36,6 +36,9 @@ export default function StockChartBody({ stock }: StockChartProps) {
   const [chartType, setChartType] = useState<"line" | "candle">("line");
   const [interval, setInterval] = useState("30m");
   const [period, setPeriod] = useState("1mo");
+  const [marketHours, setMarketHours] = useState<"rth" | "extended">("rth");
+
+  const includeExtendedHours = marketHours === "extended";
 
   const { favouriteStocks, addFavourite, deleteFavourite } =
     useFavouriteStocks();
@@ -84,8 +87,17 @@ export default function StockChartBody({ stock }: StockChartProps) {
   async function fetchHistory() {
     setLoading(true);
 
+    console.log(
+      `Fetching history for ${stock.symbol} with interval ${interval}, period ${period}, includeExtendedHours: ${includeExtendedHours}`,
+    );
+
     try {
-      const data = await getStockHistoryClient(stock.symbol, interval, period);
+      const data = await getStockHistoryClient(
+        stock.symbol,
+        interval,
+        period,
+        includeExtendedHours,
+      );
 
       const sorted = (data.history || []).sort(
         (a, b) =>
@@ -108,7 +120,7 @@ export default function StockChartBody({ stock }: StockChartProps) {
 
   useEffect(() => {
     fetchHistory();
-  }, [stock.symbol, interval, period]);
+  }, [stock.symbol, interval, period, includeExtendedHours]);
 
   function getIntervalForPeriod(period: string): string | undefined {
     return stockDataPeriods.find((p) => p.period === period)?.interval;
@@ -176,6 +188,48 @@ export default function StockChartBody({ stock }: StockChartProps) {
               </Tabs>
             </TooltipTrigger>
             <TooltipContent side="bottom">Toggle chart</TooltipContent>
+          </Tooltip>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Tabs
+                value={marketHours}
+                onValueChange={(value) => {
+                  if (value === "rth" || value === "extended") {
+                    setMarketHours(value);
+                  }
+                }}
+              >
+                <TabsList className="bg-muted gap-1 rounded-xl h-9.5">
+                  <TabsTrigger
+                    value="rth"
+                    className={cn(
+                      "rounded-lg cursor-pointer px-3 flex items-center justify-center h-full transition-all text-xs",
+                      "data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background",
+                      "data-[state=inactive]:opacity-50",
+                    )}
+                  >
+                    RTH
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="extended"
+                    className={cn(
+                      "rounded-lg cursor-pointer px-3 flex items-center justify-center h-full transition-all text-xs",
+                      "data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background",
+                      "data-[state=inactive]:opacity-50",
+                    )}
+                  >
+                    EXT
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </TooltipTrigger>
+
+            <TooltipContent side="bottom">
+              {marketHours === "rth"
+                ? "Regular Trading Hours"
+                : "Extended hours: pre-market and post-market"}
+            </TooltipContent>
           </Tooltip>
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>

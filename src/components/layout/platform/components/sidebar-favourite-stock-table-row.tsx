@@ -1,15 +1,11 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { environment } from "@/lib/utils/env";
 import {
-  ListPlus,
-  Loader2,
-  SquareArrowOutUpRight,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+  formatChange,
+  formatPercent,
+  formatPrice,
+} from "@/lib/utils/formatPrice";
+import { FavouriteStockResponse } from "@/schemas/favouriteStock";
+import { useRouter } from "next/dist/client/components/navigation";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -18,12 +14,13 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { environment } from "@/lib/utils/env";
-import type { FavouriteStockResponse } from "@/schemas/favouriteStock";
-import { cn } from "@/lib/utils";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { ListPlus, Loader2, SquareArrowOutUpRight } from "lucide-react";
 import { AddToWatchlistDialog } from "@/app/platform/ticker/[ticker]/components/add-to-watchlist-dialog";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type SidebarFavouriteStockCardProps = {
+type SidebarFavouriteStockTableRowProps = {
   stock: FavouriteStockResponse;
   onRemove: (id: number) => void | Promise<void>;
   isRemoving?: boolean;
@@ -65,50 +62,15 @@ function getChangePercent(stock: FavouriteStockResponse): number | null {
   );
 }
 
-function getCurrency(stock: FavouriteStockResponse): string {
-  const tickerDetails = getTickerDetails(stock);
-
-  return tickerDetails?.currency ?? "USD";
-}
-
-function formatPrice(value: number | null, currency: string) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
-  }
-
-  return new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatChange(value: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
-  }
-
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
-}
-
-function formatPercent(value: number | null) {
-  if (value === null || value === undefined || Number.isNaN(value)) {
-    return "—";
-  }
-
-  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
-}
-
-export function SidebarFavouriteStockCard({
+export function SidebarFavouriteStockTableRow({
   stock,
   onRemove,
   isRemoving = false,
-}: SidebarFavouriteStockCardProps) {
+}: SidebarFavouriteStockTableRowProps) {
   const router = useRouter();
 
   const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
 
-  const currency = getCurrency(stock);
   const lastPrice = getLastPrice(stock);
   const change = getChange(stock);
   const changePercent = getChangePercent(stock);
@@ -133,15 +95,14 @@ export function SidebarFavouriteStockCard({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <button
-          type="button"
+        <TableRow
           onClick={handleNavigate}
-          className="grid w-full min-w-0 grid-cols-[minmax(6rem,1fr)_minmax(4.5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)] items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-muted/50"
+          className="cursor-pointer select-none"
         >
-          <div className="flex flex-row min-w-0 items-center gap-2">
+          <TableCell className="flex flex-row items-center gap-2">
             <Avatar className="h-7 w-7 rounded-xl border bg-background">
               <AvatarImage src={logoUrl} alt={`${stock.symbol} logo`} />
-              <AvatarFallback className="rounded-xl text-[10px] font-semibold">
+              <AvatarFallback className="rounded-xl text-md font-semibold">
                 {stock.symbol.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -149,49 +110,45 @@ export function SidebarFavouriteStockCard({
             <div className="min-w-0">
               <div className="truncate text-sm font-bold">{stock.symbol}</div>
             </div>
-          </div>
+          </TableCell>
 
-          <div className="truncate text-right text-xs font-medium">
-            {lastPrice?.toFixed(2) ?? "—"}
-          </div>
+          <TableCell className={"truncate text-right text-xs font-medium"}>
+            {lastPrice !== null ? formatPrice(lastPrice) : "—"}
+          </TableCell>
 
-          <div
+          <TableCell
             className={cn(
               "truncate text-right text-xs font-medium",
               changeClassName,
             )}
           >
             {formatChange(change)}
-          </div>
+          </TableCell>
 
-          <div
+          <TableCell
             className={cn(
-              "flex items-center justify-end gap-1 truncate text-xs font-medium",
+              "truncate text-right text-xs font-medium",
               changeClassName,
             )}
           >
-            {hasChange ? (
-              isPositive ? (
-                <TrendingUp className="h-3 w-3 shrink-0" />
-              ) : (
-                <TrendingDown className="h-3 w-3 shrink-0" />
-              )
-            ) : null}
-
-            <span className="truncate">{formatPercent(changePercent)}</span>
-          </div>
-        </button>
+            {formatPercent(changePercent)}
+          </TableCell>
+        </TableRow>
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">
         <ContextMenuGroup>
-          <ContextMenuItem onClick={handleNavigate}>
-            <span className="flex items-center gap-2 text-xs">
-              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-              View {stock.symbol}
-            </span>
+          <ContextMenuItem
+            onSelect={(event) => {
+              event.preventDefault();
+              handleNavigate();
+            }}
+          >
+            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+            View {stock.symbol}
           </ContextMenuItem>
         </ContextMenuGroup>
+
         <ContextMenuGroup>
           <AddToWatchlistDialog
             stock={{
@@ -218,7 +175,7 @@ export function SidebarFavouriteStockCard({
           <ContextMenuItem
             variant="destructive"
             disabled={isRemoving}
-            onClick={(event) => {
+            onSelect={(event) => {
               event.preventDefault();
               void handleRemove();
             }}

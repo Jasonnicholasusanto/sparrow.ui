@@ -5,10 +5,9 @@ import { formatTooltipLabel, formatXAxisLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
 import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Bar,
-  CartesianGrid,
   ComposedChart,
   Rectangle,
   ResponsiveContainer,

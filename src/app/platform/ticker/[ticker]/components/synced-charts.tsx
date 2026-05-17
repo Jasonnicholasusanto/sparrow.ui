@@ -64,6 +64,7 @@ export default function SyncedStockCharts({
       ) : (
         <CandlestickChart
           data={sortedData}
+          period={period}
           symbol={symbol}
           brushRange={brushRange}
           onBrushChange={handleBrushChange}

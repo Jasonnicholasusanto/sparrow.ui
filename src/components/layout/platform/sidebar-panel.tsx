@@ -14,8 +14,15 @@ import { useFavouriteStocks } from "@/providers/favourite-stocks-provider";
 import { SidebarWatchlistCard } from "./components/sidebar-watchlist-card";
 import type { WatchlistDetailOut } from "@/schemas/watchlist";
 import type { FavouriteStockResponse } from "@/schemas/favouriteStock";
-import { SidebarFavouriteStockCard } from "./components/sidebar-favourite-stock-card";
 import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { SidebarFavouriteStockTableRow } from "./components/sidebar-favourite-stock-table-row";
 
 function SidebarSection({
   title,
@@ -62,7 +69,20 @@ function SidebarStateMessage({
   );
 }
 
-function FavouriteStocksList({
+function FavouriteStocksTableHeader() {
+  return (
+    <TableHeader>
+      <TableRow>
+        <TableHead className="w-25">Symbol</TableHead>
+        <TableHead className="text-right">Last</TableHead>
+        <TableHead className="text-right">Change</TableHead>
+        <TableHead className="text-right">Change %</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+}
+
+function FavouriteStocksTable({
   favouriteStocks,
   loading,
   onRemove,
@@ -82,38 +102,37 @@ function FavouriteStocksList({
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Loading favourite stocks...
+      </div>
+    );
+  }
+
   if (!favouriteStocks.length) {
     return (
-      <SidebarStateMessage
-        loading={loading}
-        loadingText="Loading favourite stocks..."
-        emptyText="No favourite stocks yet."
-      />
+      <div className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+        No favourite stocks yet.
+      </div>
     );
   }
 
   return (
-    <div className="space-y-1">
-      <div className="grid grid-cols-[1fr_auto] items-center gap-2 px-3 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        <div className="grid min-w-0 grid-cols-[minmax(6rem,1fr)_minmax(4.5rem,1fr)_minmax(4rem,1fr)_minmax(4rem,1fr)] items-center gap-3">
-          <span>Symbol</span>
-          <span className="text-right">Last</span>
-          <span className="text-right">Change</span>
-          <span className="text-right">Change %</span>
-        </div>
-
-        <span className="h-8 w-8" />
-      </div>
-
-      {favouriteStocks.map((stock) => (
-        <SidebarFavouriteStockCard
-          key={stock.id}
-          stock={stock}
-          onRemove={handleRemove}
-          isRemoving={removingId === stock.id}
-        />
-      ))}
-    </div>
+    <Table>
+      <FavouriteStocksTableHeader />
+      <TableBody>
+        {favouriteStocks.map((stock) => (
+          <SidebarFavouriteStockTableRow
+            key={stock.id}
+            stock={stock}
+            onRemove={handleRemove}
+            isRemoving={removingId === stock.id}
+          />
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -163,8 +182,6 @@ export function SidebarPanel() {
     deleteFavourite,
   } = useFavouriteStocks();
 
-  console.log(favouriteStocks);
-
   const favouriteCount = favouriteStocks.length;
   const watchlistCount = watchlists.length;
 
@@ -191,7 +208,7 @@ export function SidebarPanel() {
         <ResizablePanelGroup orientation="vertical" className="h-full min-h-0">
           <ResizablePanel defaultSize={favouritePanelSize} minSize={30}>
             <SidebarSection title="Favourite Stocks">
-              <FavouriteStocksList
+              <FavouriteStocksTable
                 favouriteStocks={favouriteStocks}
                 loading={favouriteStocksLoading}
                 onRemove={deleteFavourite}

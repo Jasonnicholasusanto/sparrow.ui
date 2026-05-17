@@ -7,9 +7,10 @@ export async function getStockHistoryClient(
   ticker: string,
   interval: string,
   period: string,
+  includeExtendedHours: boolean = false,
 ): Promise<StockHistoryResponse> {
   return clientApiClient<StockHistoryResponse>(
-    stockDataPaths.history(ticker, interval, period),
+    stockDataPaths.history(ticker, interval, period, includeExtendedHours),
     {
       method: "GET",
       version: Endpoints.Yfinance.Stocks.BaseVersion,
