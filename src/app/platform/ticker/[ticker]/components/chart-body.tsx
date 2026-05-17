@@ -341,6 +341,7 @@ export default function StockChartBody({ stock }: StockChartProps) {
           data={history}
           symbol={stock.symbol}
           period={period}
+          interval={interval}
           change={change}
           chartType={chartType}
         />

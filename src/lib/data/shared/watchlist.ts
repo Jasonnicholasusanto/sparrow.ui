@@ -18,4 +18,12 @@ export const watchlistDataPaths = {
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.AddWatchlistItemsBulk(
       watchlistId,
     ).replace("{watchlistId}", String(watchlistId))}`,
+  delete: (watchlistId: number) =>
+    `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlist(
+      watchlistId,
+    ).replace("{watchlistId}", String(watchlistId))}`,
+  deleteItem: (itemId: number) =>
+    `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlistItem(
+      itemId,
+    ).replace("{itemId}", String(itemId))}`,
 };

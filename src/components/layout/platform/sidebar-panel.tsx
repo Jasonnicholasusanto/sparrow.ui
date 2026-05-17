@@ -140,11 +140,24 @@ function SidebarWatchlistsList({
   watchlists,
   loading,
   onRefresh,
+  onRemove,
 }: {
   watchlists: WatchlistDetailOut[];
   loading: boolean;
   onRefresh: () => void | Promise<void>;
+  onRemove: (watchlistId: number) => void | Promise<void>;
 }) {
+  const [removingId, setRemovingId] = useState<number | null>(null);
+
+  async function handleRemove(id: number) {
+    try {
+      setRemovingId(id);
+      await onRemove(id);
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
   if (!watchlists.length) {
     return (
       <SidebarStateMessage
@@ -163,6 +176,8 @@ function SidebarWatchlistsList({
           watchlist={watchlist}
           isOwnProfile={true}
           onRefresh={onRefresh}
+          onRemove={handleRemove}
+          isRemoving={removingId === watchlist.id}
         />
       ))}
     </div>
@@ -174,6 +189,7 @@ export function SidebarPanel() {
     watchlists,
     loading: watchlistsLoading,
     refreshWatchlists,
+    deleteWatchlist,
   } = useWatchlists();
 
   const {
@@ -224,6 +240,7 @@ export function SidebarPanel() {
                 watchlists={watchlists}
                 loading={watchlistsLoading}
                 onRefresh={refreshWatchlists}
+                onRemove={deleteWatchlist}
               />
             </SidebarSection>
           </ResizablePanel>

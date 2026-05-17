@@ -21,6 +21,7 @@ interface CandlestickChartProps {
   data: HistoryPoint[];
   symbol?: string;
   period?: string;
+  interval?: string;
   brushRange: {
     startIndex: number;
     endIndex: number;
@@ -126,6 +127,7 @@ export default function CandlestickChart({
   data,
   symbol = "STOCK",
   period,
+  interval,
   brushRange,
   onBrushChange,
 }: CandlestickChartProps) {
@@ -257,7 +259,13 @@ export default function CandlestickChart({
           />
 
           <Tooltip
-            content={<CustomTooltip symbol={symbol} period={period} />}
+            content={
+              <CustomTooltip
+                symbol={symbol}
+                period={period}
+                interval={interval}
+              />
+            }
             cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />

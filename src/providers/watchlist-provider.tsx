@@ -11,7 +11,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
-import { getMyWatchlistsClient } from "@/lib/data/client/watchlist";
+import {
+  deleteWatchlistClient,
+  getMyWatchlistsClient,
+} from "@/lib/data/client/watchlist";
 import type {
   GetMyWatchlistsResponse,
   WatchlistDetailOut,
@@ -23,6 +26,7 @@ type WatchlistContextValue = {
   loading: boolean;
   hasLoaded: boolean;
   refreshWatchlists: () => Promise<void>;
+  deleteWatchlist: (watchlistId: number) => Promise<void>;
   setWatchlistsResponse: React.Dispatch<
     React.SetStateAction<GetMyWatchlistsResponse | null>
   >;
@@ -64,6 +68,40 @@ export default function WatchlistProvider({
     }
   }, []);
 
+  const deleteWatchlist = useCallback(async (watchlistId: number) => {
+    try {
+      await deleteWatchlistClient(watchlistId);
+
+      setWatchlistsResponse((current) => {
+        if (!current?.results) return current;
+
+        return {
+          ...current,
+          results: {
+            ...current.results,
+            created: current.results.created?.filter(
+              (watchlist) => watchlist.id !== watchlistId,
+            ),
+            forked: current.results.forked?.filter(
+              (watchlist) => watchlist.id !== watchlistId,
+            ),
+            shared: current.results.shared?.filter(
+              (watchlist) => watchlist.id !== watchlistId,
+            ),
+            bookmarked: current.results.bookmarked?.filter(
+              (watchlist) => watchlist.id !== watchlistId,
+            ),
+          },
+        };
+      });
+
+      toast.success("Watchlist deleted");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete watchlist");
+    }
+  }, []);
+
   useEffect(() => {
     if (!hasLoaded) {
       void refreshWatchlists();
@@ -94,6 +132,7 @@ export default function WatchlistProvider({
       loading,
       hasLoaded,
       refreshWatchlists,
+      deleteWatchlist,
       setWatchlistsResponse,
     }),
     [
@@ -102,6 +141,7 @@ export default function WatchlistProvider({
       loading,
       hasLoaded,
       refreshWatchlists,
+      deleteWatchlist,
       setWatchlistsResponse,
     ],
   );

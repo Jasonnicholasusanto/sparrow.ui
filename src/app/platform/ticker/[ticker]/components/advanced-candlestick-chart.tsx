@@ -14,10 +14,10 @@ import { PageMotion } from "@/components/layout/motion-wrapper";
 
 interface CandlestickChartProps {
   data: HistoryPoint[];
-  symbol?: string; // optional
+  symbol?: string;
 }
 
-export default function CandlestickChart({
+export default function AdvancedCandlestickChart({
   data,
   symbol = "STOCK",
 }: CandlestickChartProps) {

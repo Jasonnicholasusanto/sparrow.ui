@@ -76,3 +76,23 @@ export async function updateWatchlistClient(
     },
   );
 }
+
+export async function deleteWatchlistClient(watchlistId: number) {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.delete(watchlistId),
+    {
+      method: "DELETE",
+      version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}
+
+export async function deleteWatchlistItemClient(itemId: number) {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.deleteItem(itemId),
+    {
+      method: "DELETE",
+      version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}

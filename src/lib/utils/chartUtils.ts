@@ -1,4 +1,8 @@
-export function formatTooltipLabel(iso: string, period?: string) {
+export function formatTooltipLabel(
+  iso: string,
+  period?: string,
+  interval?: string,
+) {
   const [datePart] = iso.split("T");
   const [year, month, day] = datePart.split("-");
 
@@ -8,12 +12,16 @@ export function formatTooltipLabel(iso: string, period?: string) {
     timeZone: "UTC",
   });
 
-  const formattedDate = formatXAxisLabel(iso, period);
+  const formattedDate = formatXAxisLabel(iso, period, interval);
 
   return `${weekday} ${formattedDate}`;
 }
 
-export function formatXAxisLabel(iso: string, period?: string) {
+export function formatXAxisLabel(
+  iso: string,
+  period?: string,
+  interval?: string,
+) {
   const [datePart, timePartWithOffset] = iso.split("T");
 
   if (!datePart || !timePartWithOffset) {
@@ -30,23 +38,19 @@ export function formatXAxisLabel(iso: string, period?: string) {
   switch (period) {
     case "1d":
     case "5d":
-    case "1wk":
-    case "1w":
-      return `${day} ${monthLabel} ${timePart}`;
-
     case "1mo":
     case "3mo":
+      return `${day} ${monthLabel} ${year} ${timePart}`;
+
     case "6mo":
+    case "1y":
+    case "5y":
       return `${day} ${monthLabel} ${year}`;
 
-    case "1y":
-    case "2y":
-    case "5y":
-    case "10y":
     case "max":
       return `${monthLabel} ${year}`;
 
     default:
-      return `${day} ${monthLabel} ${year}`;
+      return `${day} ${monthLabel} ${year} ${timePart}`;
   }
 }

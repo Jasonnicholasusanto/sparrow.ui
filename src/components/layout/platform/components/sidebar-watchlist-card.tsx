@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
 
 import {
   Avatar,
@@ -13,11 +13,20 @@ import { Badge } from "@/components/ui/badge";
 import type { WatchlistDetailOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
 import { WatchlistDetailsDialog } from "@/components/watchlist/watchlist-details-dialog";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 type SidebarWatchlistCardProps = {
   watchlist: WatchlistDetailOut;
   isOwnProfile: boolean;
   onRefresh: () => void | Promise<void>;
+  onRemove: (id: number) => void | Promise<void>;
+  isRemoving?: boolean;
 };
 
 type WatchlistItemLike = NonNullable<WatchlistDetailOut["items"]>[number];
@@ -143,51 +152,85 @@ export function SidebarWatchlistCard({
   watchlist,
   isOwnProfile,
   onRefresh,
+  onRemove,
+  isRemoving = false,
 }: SidebarWatchlistCardProps) {
   const items = watchlist.items ?? [];
   const averageChangePercent = getAverageChangePercent(items);
 
+  async function handleRemove() {
+    if (onRemove) {
+      await onRemove(watchlist.id);
+    }
+  }
+
   return (
-    <WatchlistDetailsDialog
-      watchlist={watchlist}
-      isOwnProfile={isOwnProfile}
-      onRefresh={onRefresh}
-      trigger={
-        <button
-          type="button"
-          className="w-full rounded-2xl border px-3 py-3 text-left transition-colors hover:bg-muted/40"
-        >
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex min-w-0 items-center gap-2">
-                <p className="truncate font-medium">{watchlist.name}</p>
+    <ContextMenu>
+      <WatchlistDetailsDialog
+        watchlist={watchlist}
+        isOwnProfile={isOwnProfile}
+        onRefresh={onRefresh}
+        trigger={
+          <ContextMenuTrigger asChild>
+            <button
+              type="button"
+              className="w-full rounded-2xl border px-3 py-3 text-left transition-colors hover:bg-muted/40"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="truncate font-medium">{watchlist.name}</p>
 
-                <Badge
-                  variant="outline"
-                  className="shrink-0 rounded-full text-[10px]"
-                >
-                  {getVisibilityLabel(watchlist.visibility)}
-                </Badge>
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 rounded-full text-[10px]"
+                    >
+                      {getVisibilityLabel(watchlist.visibility)}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {items.length}{" "}
+                    {items.length === 1 ? "stock/fund" : "stocks/funds"}
+                  </div>
+                </div>
+
+                <ChangeBadge value={averageChangePercent} />
               </div>
 
-              <div className="mt-1 text-xs text-muted-foreground">
-                {items.length}{" "}
-                {items.length === 1 ? "stock/fund" : "stocks/funds"}
-              </div>
-            </div>
+              {items.length ? (
+                <WatchlistAvatarGroup items={items} />
+              ) : (
+                <div className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted-foreground">
+                  No items added
+                </div>
+              )}
+            </button>
+          </ContextMenuTrigger>
+        }
+      />
 
-            <ChangeBadge value={averageChangePercent} />
-          </div>
-
-          {items.length ? (
-            <WatchlistAvatarGroup items={items} />
-          ) : (
-            <div className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted-foreground">
-              No items added
-            </div>
-          )}
-        </button>
-      }
-    />
+      <ContextMenuContent className="w-52">
+        <ContextMenuGroup>
+          <ContextMenuItem
+            variant="destructive"
+            disabled={isRemoving}
+            onSelect={(event) => {
+              event.preventDefault();
+              void handleRemove();
+            }}
+          >
+            {isRemoving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Removing...
+              </>
+            ) : (
+              <>Remove from watchlist</>
+            )}
+          </ContextMenuItem>
+        </ContextMenuGroup>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
