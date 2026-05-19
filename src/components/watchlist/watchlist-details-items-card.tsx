@@ -1,10 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { NotepadText } from "lucide-react";
+import {
+  Info,
+  Loader2,
+  NotepadText,
+  SquareArrowOutUpRight,
+  Trash2,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   Dialog,
   DialogContent,
@@ -13,16 +28,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { WatchlistItemOut } from "@/schemas/watchlist";
-import { environment } from "@/lib/utils/env";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WatchlistItemOut } from "@/schemas/watchlist";
+import { environment } from "@/lib/utils/env";
 
 type WatchlistDetailsItemCardProps = {
   item: WatchlistItemOut;
+  onRemove?: (itemId: number) => Promise<void> | void;
 };
 
 function formatNumber(
@@ -78,8 +94,12 @@ function MetricCell({
 
 export function WatchlistDetailsItemCard({
   item,
+  onRemove,
 }: WatchlistDetailsItemCardProps) {
   const router = useRouter();
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
 
@@ -106,97 +126,222 @@ export function WatchlistDetailsItemCard({
     router.push(`/platform/ticker/${item.symbol}`);
   }
 
+  async function handleRemove() {
+    if (!onRemove) return;
+
+    try {
+      setRemoving(true);
+      await onRemove(item.id);
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-5 rounded-xl border bg-card px-4 py-3 text-sm transition-colors hover:bg-muted/40">
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handleNavigate}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            handleNavigate();
-          }
-        }}
-        className="grid cursor-pointer grid-cols-6 items-center gap-4"
-      >
-        <div className="flex flex-row gap-3 w-lg">
-          <Avatar className="h-10 w-10 rounded-xl border bg-background">
-            <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
-            <AvatarFallback className="rounded-xl text-xs font-semibold">
-              {item.symbol.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div className="grid grid-cols-[1fr_auto] items-center gap-5 rounded-xl border bg-card px-4 py-3 text-sm transition-colors hover:bg-muted/40">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleNavigate}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleNavigate();
+                }
+              }}
+              className="grid cursor-pointer grid-cols-6 items-center gap-4"
+            >
+              <div className="flex w-lg flex-row gap-3">
+                <Avatar className="h-10 w-10 rounded-xl border bg-background">
+                  <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
+                  <AvatarFallback className="rounded-xl text-xs font-semibold">
+                    {item.symbol.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{item.symbol}</p>
-            {item.exchange ? (
-              <p className="truncate text-xs text-muted-foreground">
-                {item.exchange}
-              </p>
-            ) : null}
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{item.symbol}</p>
+                  {item.exchange ? (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.exchange}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              <MetricCell label="Currency" value={currency ?? "—"} />
+
+              <MetricCell
+                label="Quantity"
+                value={formatNumber(item.quantity)}
+              />
+
+              <MetricCell
+                label="Last price"
+                value={formatCurrency(lastPrice, currency)}
+              />
+
+              <MetricCell
+                label="Change"
+                value={formatChange(regularMarketChange)}
+                className={changeClassName}
+              />
+
+              <MetricCell
+                label="Change %"
+                value={formatPercent(regularMarketChangePercent)}
+                className={changeClassName}
+              />
+            </div>
+
+            <Dialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                      aria-label={`View ${item.symbol} note`}
+                    >
+                      <NotepadText className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Notes</TooltipContent>
+              </Tooltip>
+
+              <DialogContent className="min-w-lg">
+                <DialogHeader>
+                  <DialogTitle>{item.symbol} note</DialogTitle>
+                  <DialogDescription>
+                    Notes attached to this watchlist item.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="rounded-xl border bg-muted/30 p-4 text-sm">
+                  {item.note ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {item.note}
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      No note has been added for this stock.
+                    </p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
+        </ContextMenuTrigger>
 
-        <MetricCell label="Currency" value={currency ?? "—"} />
+        <ContextMenuContent className="w-56">
+          <ContextMenuGroup>
+            <ContextMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                handleNavigate();
+              }}
+            >
+              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+              View {item.symbol}
+            </ContextMenuItem>
 
-        <MetricCell label="Quantity" value={formatNumber(item.quantity)} />
+            <ContextMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                setDetailsOpen(true);
+              }}
+            >
+              <Info className="mr-2 h-4 w-4" />
+              View Details
+            </ContextMenuItem>
+          </ContextMenuGroup>
 
-        <MetricCell
-          label="Last price"
-          value={formatCurrency(lastPrice, currency)}
-        />
+          <ContextMenuSeparator />
 
-        <MetricCell
-          label="Change"
-          value={formatChange(regularMarketChange)}
-          className={changeClassName}
-        />
+          <ContextMenuGroup>
+            <ContextMenuItem
+              variant="destructive"
+              disabled={removing || !onRemove}
+              onSelect={(event) => {
+                event.preventDefault();
+                void handleRemove();
+              }}
+            >
+              {removing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove from watchlist
+                </>
+              )}
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        </ContextMenuContent>
+      </ContextMenu>
 
-        <MetricCell
-          label="Change %"
-          value={formatPercent(regularMarketChangePercent)}
-          className={changeClassName}
-        />
-      </div>
-
-      <Dialog>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                aria-label={`View ${item.symbol} note`}
-              >
-                <NotepadText className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-          </TooltipTrigger>
-          <TooltipContent>Notes</TooltipContent>
-        </Tooltip>
-
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="min-w-lg">
           <DialogHeader>
-            <DialogTitle>{item.symbol} note</DialogTitle>
+            <DialogTitle>{item.symbol} details</DialogTitle>
             <DialogDescription>
-              Notes attached to this watchlist item.
+              Detailed watchlist item information.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-xl border bg-muted/30 p-4 text-sm">
-            {item.note ? (
-              <p className="whitespace-pre-wrap leading-relaxed">{item.note}</p>
-            ) : (
-              <p className="text-muted-foreground">
-                No note has been added for this stock.
-              </p>
-            )}
+          <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm">
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Symbol</span>
+              <span className="font-medium">{item.symbol}</span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Exchange</span>
+              <span className="font-medium">{item.exchange ?? "—"}</span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Currency</span>
+              <span className="font-medium">{currency ?? "—"}</span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Quantity</span>
+              <span className="font-medium">{formatNumber(item.quantity)}</span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Last price</span>
+              <span className="font-medium">
+                {formatCurrency(lastPrice, currency)}
+              </span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Change</span>
+              <span className={`font-medium ${changeClassName}`}>
+                {formatChange(regularMarketChange)}
+              </span>
+            </div>
+
+            <div className="flex justify-between gap-4">
+              <span className="text-muted-foreground">Change %</span>
+              <span className={`font-medium ${changeClassName}`}>
+                {formatPercent(regularMarketChangePercent)}
+              </span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

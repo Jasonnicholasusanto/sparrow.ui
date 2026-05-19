@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { WatchlistDetailOut } from "@/schemas/watchlist";
 import { WatchlistDetailsItemCard } from "./watchlist-details-items-card";
 import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
+import { useWatchlists } from "@/providers/watchlist-provider";
 
 type WatchlistDetailsDialogProps = {
   trigger: React.ReactNode;
@@ -40,6 +41,7 @@ export function WatchlistDetailsDialog({
   isOwnProfile,
   onRefresh,
 }: WatchlistDetailsDialogProps) {
+  const { deleteWatchlistItem } = useWatchlists();
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -80,7 +82,11 @@ export function WatchlistDetailsDialog({
           <div className="space-y-3">
             {watchlist.items?.length ? (
               watchlist.items.map((item) => (
-                <WatchlistDetailsItemCard key={item.id} item={item} />
+                <WatchlistDetailsItemCard
+                  key={item.id}
+                  item={item}
+                  onRemove={() => deleteWatchlistItem(item.id)}
+                />
               ))
             ) : (
               <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
