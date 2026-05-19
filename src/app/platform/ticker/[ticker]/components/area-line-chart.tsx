@@ -23,6 +23,7 @@ interface StockAreaLineChartProps {
   change?: number;
   period?: string;
   symbol?: string;
+  interval?: string;
   brushRange: {
     startIndex: number;
     endIndex: number;
@@ -34,7 +35,14 @@ function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-function CustomTooltip({ active, payload, label, symbol, period }: any) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  symbol,
+  period,
+  interval,
+}: any) {
   if (!active || !payload || payload.length === 0) return null;
 
   const point = payload[0]?.payload as HistoryPoint | undefined;
@@ -44,7 +52,7 @@ function CustomTooltip({ active, payload, label, symbol, period }: any) {
     <div className="rounded-xl border bg-card/95 backdrop-blur-sm p-3 shadow-md text-xs space-y-1.5 min-w-52">
       <div className="font-semibold text-sm">{symbol}</div>
       <div className="text-muted-foreground">
-        {formatTooltipLabel(label, period)}
+        {formatTooltipLabel(label, period, interval)}
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
         <div>
@@ -82,6 +90,7 @@ export default function StockAreaLineChart({
   period,
   symbol,
   brushRange,
+  interval,
   onBrushChange,
 }: StockAreaLineChartProps) {
   if (!data || data.length === 0) {
@@ -176,7 +185,13 @@ export default function StockAreaLineChart({
           />
 
           <Tooltip
-            content={<CustomTooltip symbol={symbol} period={period} />}
+            content={
+              <CustomTooltip
+                symbol={symbol}
+                period={period}
+                interval={interval}
+              />
+            }
             cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />

@@ -5,10 +5,9 @@ import { formatTooltipLabel, formatXAxisLabel } from "@/lib/utils/chartUtils";
 import { HistoryPoint } from "@/schemas/stock";
 import { getBrushFill, getBrushStroke, GREEN, RED } from "@/styles/chart";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Bar,
-  CartesianGrid,
   ComposedChart,
   Rectangle,
   ResponsiveContainer,
@@ -22,6 +21,7 @@ interface CandlestickChartProps {
   data: HistoryPoint[];
   symbol?: string;
   period?: string;
+  interval?: string;
   brushRange: {
     startIndex: number;
     endIndex: number;
@@ -127,6 +127,7 @@ export default function CandlestickChart({
   data,
   symbol = "STOCK",
   period,
+  interval,
   brushRange,
   onBrushChange,
 }: CandlestickChartProps) {
@@ -258,7 +259,13 @@ export default function CandlestickChart({
           />
 
           <Tooltip
-            content={<CustomTooltip symbol={symbol} period={period} />}
+            content={
+              <CustomTooltip
+                symbol={symbol}
+                period={period}
+                interval={interval}
+              />
+            }
             cursor={<CrosshairCursor />}
             isAnimationActive={false}
           />

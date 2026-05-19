@@ -3,9 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 
 import Header from "@/components/layout/platform/header";
-import Onboarding, {
-  type OnboardingFormValues,
-} from "./components/onboarding-dialog";
+import { type OnboardingFormValues } from "./components/onboarding-dialog";
 import { useUser } from "@/providers/user-provider";
 import { toast } from "sonner";
 import { SidebarPanel } from "@/components/layout/platform/sidebar-panel";

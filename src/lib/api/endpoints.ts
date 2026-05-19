@@ -49,7 +49,7 @@ export const Endpoints = {
   FavouriteStocks: {
     BaseVersion: "v1",
     Base: "/favourite-stocks",
-    ById: (id: number) => `/${id}`,
+    Delete: (id: number) => `/${id}`,
   },
   Yfinance: {
     BaseVersion: "v1",
@@ -73,10 +73,15 @@ export const Endpoints = {
           query,
         )}?${params.toString()}`;
       },
-      SimpleHistory: (ticker: string, interval: string, period: string) =>
+      SimpleHistory: (
+        ticker: string,
+        interval: string,
+        period: string,
+        includeExtendedHours: boolean = false,
+      ) =>
         `/get-ticker-history/${ticker}?interval=${encodeURIComponent(
           interval,
-        )}&period=${encodeURIComponent(period)}`,
+        )}&period=${encodeURIComponent(period)}&inc_prepost=${includeExtendedHours}`,
     },
     Screener: {
       BaseVersion: "v1",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,10 @@ import { stockDataPeriods } from "@/lib/options/stockDataOptions";
 import { getStockHistoryClient } from "@/lib/data/client/stock";
 import SyncedStockCharts from "./synced-charts";
 import { Spinner } from "@/components/ui/spinner";
-import AddToWatchlistDialog from "./add-to-watchlist-dialog";
+import { useFavouriteStocks } from "@/providers/favourite-stocks-provider";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { AddToWatchlistDialog } from "./add-to-watchlist-dialog";
 
 interface StockChartProps {
   stock: StockInfoResponse;
@@ -33,12 +36,68 @@ export default function StockChartBody({ stock }: StockChartProps) {
   const [chartType, setChartType] = useState<"line" | "candle">("line");
   const [interval, setInterval] = useState("30m");
   const [period, setPeriod] = useState("1mo");
+  const [marketHours, setMarketHours] = useState<"rth" | "extended">("rth");
+
+  const includeExtendedHours = marketHours === "extended";
+
+  const { favouriteStocks, addFavourite, deleteFavourite } =
+    useFavouriteStocks();
+
+  const [isFavouritePending, startFavouriteTransition] = useTransition();
+
+  const favouriteStock = useMemo(() => {
+    return favouriteStocks.find(
+      (item) => item.symbol.toUpperCase() === stock.symbol.toUpperCase(),
+    );
+  }, [favouriteStocks, stock.symbol]);
+
+  const isFavourite = Boolean(favouriteStock);
+
+  function handleToggleFavourite() {
+    startFavouriteTransition(async () => {
+      try {
+        if (favouriteStock) {
+          await deleteFavourite(favouriteStock.id);
+          toast.success(`${stock.symbol} removed from favourites`);
+          return;
+        }
+
+        const exchange = stock.exchange || stock.market;
+
+        if (!exchange) {
+          toast.error(
+            "Unable to add favourite stock because exchange is missing.",
+          );
+          return;
+        }
+
+        await addFavourite(stock.symbol, exchange, null);
+        toast.success(`${stock.symbol} added to favourites`);
+      } catch (error) {
+        console.error(error);
+        toast.error(
+          isFavourite
+            ? "Failed to remove stock from favourites"
+            : "Failed to add stock to favourites",
+        );
+      }
+    });
+  }
 
   async function fetchHistory() {
     setLoading(true);
 
+    console.log(
+      `Fetching history for ${stock.symbol} with interval ${interval}, period ${period}, includeExtendedHours: ${includeExtendedHours}`,
+    );
+
     try {
-      const data = await getStockHistoryClient(stock.symbol, interval, period);
+      const data = await getStockHistoryClient(
+        stock.symbol,
+        interval,
+        period,
+        includeExtendedHours,
+      );
 
       const sorted = (data.history || []).sort(
         (a, b) =>
@@ -61,7 +120,7 @@ export default function StockChartBody({ stock }: StockChartProps) {
 
   useEffect(() => {
     fetchHistory();
-  }, [stock.symbol, interval, period]);
+  }, [stock.symbol, interval, period, includeExtendedHours]);
 
   function getIntervalForPeriod(period: string): string | undefined {
     return stockDataPeriods.find((p) => p.period === period)?.interval;
@@ -132,6 +191,48 @@ export default function StockChartBody({ stock }: StockChartProps) {
           </Tooltip>
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>
+              <Tabs
+                value={marketHours}
+                onValueChange={(value) => {
+                  if (value === "rth" || value === "extended") {
+                    setMarketHours(value);
+                  }
+                }}
+              >
+                <TabsList className="bg-muted gap-1 rounded-xl h-9.5">
+                  <TabsTrigger
+                    value="rth"
+                    className={cn(
+                      "rounded-lg cursor-pointer px-3 flex items-center justify-center h-full transition-all text-xs",
+                      "data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background",
+                      "data-[state=inactive]:opacity-50",
+                    )}
+                  >
+                    RTH
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="extended"
+                    className={cn(
+                      "rounded-lg cursor-pointer px-3 flex items-center justify-center h-full transition-all text-xs",
+                      "data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background",
+                      "data-[state=inactive]:opacity-50",
+                    )}
+                  >
+                    EXT
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </TooltipTrigger>
+
+            <TooltipContent side="bottom">
+              {marketHours === "rth"
+                ? "Regular Trading Hours"
+                : "Extended hours: pre-market and post-market"}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
               <AddToWatchlistDialog
                 stock={{
                   symbol: stock.symbol,
@@ -152,11 +253,27 @@ export default function StockChartBody({ stock }: StockChartProps) {
           </Tooltip>
           <Tooltip delayDuration={500}>
             <TooltipTrigger asChild>
-              <Button variant="secondary" className="rounded-xl p-2">
-                <LuHeart />
+              <Button
+                type="button"
+                variant={isFavourite ? "default" : "secondary"}
+                className="rounded-xl p-2"
+                aria-pressed={isFavourite}
+                disabled={isFavouritePending}
+                onClick={handleToggleFavourite}
+              >
+                {isFavouritePending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LuHeart
+                    className={cn("h-4 w-4", isFavourite && "fill-current")}
+                  />
+                )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Add to favourites</TooltipContent>
+
+            <TooltipContent side="bottom">
+              {isFavourite ? "Remove from favourites" : "Add to favourites"}
+            </TooltipContent>
           </Tooltip>
         </div>
         <div className="flex flex-end justify-end items-center">
@@ -224,6 +341,7 @@ export default function StockChartBody({ stock }: StockChartProps) {
           data={history}
           symbol={stock.symbol}
           period={period}
+          interval={interval}
           change={change}
           chartType={chartType}
         />

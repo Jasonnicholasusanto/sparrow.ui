@@ -2,16 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  BarChart3,
-  LayoutDashboard,
-  Star,
-  Settings,
-  Bell,
-  LogOut,
-  UserRound,
-  CreditCard,
-} from "lucide-react";
+import { Bell, LogOut, UserRound, CreditCard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -38,7 +29,7 @@ import { parseFullName } from "@/lib/utils/parseName";
 import { usePathname } from "next/navigation";
 import { useHeader } from "@/providers/header-provider";
 import { ExpandableSearch } from "./components/expandable-search";
-import { CreateWatchlistDialog } from "@/components/create-watchlist/create-watchlist-dialog";
+import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 
 export default function Header() {
   const { user } = useUser();
@@ -105,7 +96,7 @@ export default function Header() {
 
           <ThemeToggle />
 
-          <CreateWatchlistDialog isIconOnly={true} />
+          <WatchlistDialog isIconOnly={true} mode="create" />
 
           <Button size="icon" variant="ghost">
             <Bell className="h-5 w-5" />

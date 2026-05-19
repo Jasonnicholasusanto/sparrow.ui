@@ -62,3 +62,37 @@ export async function createWatchlistClient(
     },
   );
 }
+
+export async function updateWatchlistClient(
+  watchlistId: number,
+  payload: WatchlistDetailCreatePayload,
+): Promise<{ message: string }> {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.update(watchlistId),
+    {
+      method: "PATCH",
+      version: Endpoints.Watchlists.BaseVersion,
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function deleteWatchlistClient(watchlistId: number) {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.delete(watchlistId),
+    {
+      method: "DELETE",
+      version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}
+
+export async function deleteWatchlistItemClient(itemId: number) {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.deleteItem(itemId),
+    {
+      method: "DELETE",
+      version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}

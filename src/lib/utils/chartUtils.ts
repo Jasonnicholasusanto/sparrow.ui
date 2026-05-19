@@ -1,4 +1,8 @@
-export function formatTooltipLabel(iso: string, period?: string) {
+export function formatTooltipLabel(
+  iso: string,
+  period?: string,
+  interval?: string,
+) {
   const [datePart] = iso.split("T");
   const [year, month, day] = datePart.split("-");
 
@@ -8,52 +12,45 @@ export function formatTooltipLabel(iso: string, period?: string) {
     timeZone: "UTC",
   });
 
-  const formattedDate = formatXAxisLabel(iso, period);
+  const formattedDate = formatXAxisLabel(iso, period, interval);
 
   return `${weekday} ${formattedDate}`;
 }
 
-export function formatXAxisLabel(iso: string, period?: string) {
-  const date = new Date(iso);
+export function formatXAxisLabel(
+  iso: string,
+  period?: string,
+  interval?: string,
+) {
+  const [datePart, timePartWithOffset] = iso.split("T");
+
+  if (!datePart || !timePartWithOffset) {
+    return iso;
+  }
+
+  const [year, month, day] = datePart.split("-");
+  const timePart = timePartWithOffset.slice(0, 5);
+
+  const monthLabel = new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+  }).format(new Date(Number(year), Number(month) - 1, Number(day)));
 
   switch (period) {
     case "1d":
     case "5d":
-    case "1wk":
-    case "1w":
-      return date
-        .toLocaleString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-        .replace(",", "");
-
     case "1mo":
     case "3mo":
-    case "6mo":
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      return `${day} ${monthLabel} ${year} ${timePart}`;
 
+    case "6mo":
     case "1y":
-    case "2y":
     case "5y":
-    case "10y":
+      return `${day} ${monthLabel} ${year}`;
+
     case "max":
-      return date.toLocaleDateString("en-GB", {
-        month: "short",
-        year: "numeric",
-      });
+      return `${monthLabel} ${year}`;
 
     default:
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      return `${day} ${monthLabel} ${year} ${timePart}`;
   }
 }

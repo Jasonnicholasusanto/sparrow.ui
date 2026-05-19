@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import {
   Check,
   Loader2,
@@ -9,9 +9,9 @@ import {
   Users,
   Globe,
   ListPlus,
+  Binoculars,
 } from "lucide-react";
 import { toast } from "sonner";
-import { LuEye } from "react-icons/lu";
 import { BiSolidDownArrow, BiSolidUpArrow } from "react-icons/bi";
 
 import {
@@ -36,13 +36,12 @@ import {
   addItemToWatchlistClient,
   getMyWatchlistsClient,
 } from "@/lib/data/client/watchlist";
-import { CreateWatchlistDialog } from "@/components/create-watchlist/create-watchlist-dialog";
 import type {
   AddWatchlistItem,
   GetMyWatchlistsResponse,
-  Watchlist,
   WatchlistDetailOut,
 } from "@/schemas/watchlist";
+import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 
 type WatchlistTickerPreview = {
   symbol: string;
@@ -64,6 +63,9 @@ type StockSummary = {
 
 type AddToWatchlistDialogProps = {
   stock: StockSummary;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type WatchlistSectionKey = "created" | "forked" | "shared" | "bookmarked";
@@ -292,7 +294,8 @@ function EmptyWatchlistsState({
       </p>
 
       <div className="mt-6">
-        <CreateWatchlistDialog
+        <WatchlistDialog
+          mode="create"
           isIconOnly={false}
           initialSeedItems={[
             {
@@ -574,10 +577,23 @@ function WatchlistSection({
   );
 }
 
-export default function AddToWatchlistDialog({
+export function AddToWatchlistDialog({
   stock,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: AddToWatchlistDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const open = controlledOpen ?? internalOpen;
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (onOpenChange) {
+      onOpenChange(nextOpen);
+    } else {
+      setInternalOpen(nextOpen);
+    }
+  }
   const [loading, setLoading] = useState(false);
   const [watchlistsResponse, setWatchlistsResponse] =
     useState<GetMyWatchlistsResponse | null>(null);
@@ -617,12 +633,16 @@ export default function AddToWatchlistDialog({
   const grouped = watchlistsResponse?.results;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default" className="rounded-xl p-2">
-          <LuEye />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : controlledOpen === undefined ? (
+        <DialogTrigger asChild>
+          <Button variant="secondary" className="rounded-xl p-2">
+            <Binoculars className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      ) : null}
 
       <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
         <DialogHeader>

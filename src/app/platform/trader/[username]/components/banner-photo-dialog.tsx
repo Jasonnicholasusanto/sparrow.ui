@@ -40,7 +40,10 @@ export default function BannerPhotoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="gap-12 w-full min-w-2xl">
+      <DialogContent
+        className="gap-12 w-full min-w-2xl"
+        aria-describedby={undefined}
+      >
         <DialogHeader>
           <DialogTitle className="font-extrabold">Banner Image</DialogTitle>
         </DialogHeader>

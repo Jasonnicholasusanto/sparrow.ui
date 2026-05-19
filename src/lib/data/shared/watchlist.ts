@@ -8,6 +8,8 @@ export const watchlistDataPaths = {
   myWatchlists: () =>
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.MyWatchlists}`,
   create: () => `${Endpoints.Watchlists.Base}`,
+  update: (watchlistId: number) =>
+    `${Endpoints.Watchlists.Base}/${watchlistId}`,
   addWatchlistItem: (watchlistId: number) =>
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.AddWatchlistItem(
       watchlistId,
@@ -16,4 +18,12 @@ export const watchlistDataPaths = {
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.AddWatchlistItemsBulk(
       watchlistId,
     ).replace("{watchlistId}", String(watchlistId))}`,
+  delete: (watchlistId: number) =>
+    `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlist(
+      watchlistId,
+    ).replace("{watchlistId}", String(watchlistId))}`,
+  deleteItem: (itemId: number) =>
+    `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlistItem(
+      itemId,
+    ).replace("{itemId}", String(itemId))}`,
 };

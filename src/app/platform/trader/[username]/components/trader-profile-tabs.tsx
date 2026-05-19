@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -10,36 +9,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getMyWatchlistsClient } from "@/lib/data/client/watchlist";
-import type {
-  GetMyWatchlistsResponse,
-  WatchlistDetailOut,
-} from "@/schemas/watchlist";
 import { WatchlistsTab } from "./watchlists-tab";
+import { useWatchlists } from "@/providers/watchlist-provider";
 
 type TraderProfileTabsProps = {
   isOwnProfile: boolean;
 };
 
-type WatchlistVisibilityFilter = "public" | "shared" | "private";
+type WatchlistVisibilityFilter = "all" | "public" | "shared" | "private";
 
 export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
   const [watchlistVisibility, setWatchlistVisibility] =
-    useState<WatchlistVisibilityFilter>("public");
-  const [loading, setLoading] = useState(false);
-  const [watchlistsResponse, setWatchlistsResponse] =
-    useState<GetMyWatchlistsResponse | null>(null);
+    useState<WatchlistVisibilityFilter>("all");
+
+  const {
+    watchlists: allWatchlists,
+    loading,
+    refreshWatchlists,
+  } = useWatchlists();
 
   const visibilityOptions = useMemo(() => {
     if (isOwnProfile) {
       return [
+        { label: "All", value: "all" },
         { label: "Public", value: "public" },
         { label: "Shared", value: "shared" },
         { label: "Private", value: "private" },
       ] as const;
     }
 
-    return [{ label: "Public", value: "public" }] as const;
+    return [
+      { label: "All", value: "all" },
+      { label: "Public", value: "public" },
+    ] as const;
   }, [isOwnProfile]);
 
   const tabs = [
@@ -48,41 +50,11 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
     { label: "Activity", active: false, disabled: true },
   ] as const;
 
-  async function loadWatchlists() {
-    try {
-      setLoading(true);
-      const res = await getMyWatchlistsClient();
-      setWatchlistsResponse(res);
-    } catch (error) {
-      console.error(error);
-      setWatchlistsResponse(null);
-      toast.error("Failed to load watchlists");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadWatchlists();
-  }, []);
-
-  const allWatchlists = useMemo(() => {
-    const grouped = watchlistsResponse?.results;
-    if (!grouped) return [];
-
-    const merged = [
-      ...(grouped.created ?? []),
-      ...(grouped.forked ?? []),
-      ...(grouped.shared ?? []),
-      ...(grouped.bookmarked ?? []),
-    ];
-
-    return Array.from(
-      new Map(merged.map((watchlist) => [watchlist.id, watchlist])).values(),
-    ) as WatchlistDetailOut[];
-  }, [watchlistsResponse]);
-
   const filteredWatchlists = useMemo(() => {
+    if (watchlistVisibility === "all") {
+      return allWatchlists;
+    }
+
     return allWatchlists.filter(
       (watchlist) => watchlist.visibility === watchlistVisibility,
     );
@@ -134,7 +106,7 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
 
       <p className="px-1 pt-3 text-xs text-muted-foreground">
         {isOwnProfile
-          ? "Filter your watchlists by Public, Shared, or Private. Posts and Activity are coming later."
+          ? "Filter your watchlists by All, Public, Shared, or Private. Posts and Activity are coming later."
           : "You can currently view public watchlists here. Posts and Activity are coming later."}
       </p>
 
@@ -143,7 +115,7 @@ export function TraderProfileTabs({ isOwnProfile }: TraderProfileTabsProps) {
           watchlists={filteredWatchlists}
           loading={loading}
           isOwnProfile={isOwnProfile}
-          onRefresh={loadWatchlists}
+          onRefresh={refreshWatchlists}
         />
       </div>
     </section>

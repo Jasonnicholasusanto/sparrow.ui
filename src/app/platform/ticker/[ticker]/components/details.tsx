@@ -18,7 +18,7 @@ export default function StockDetails({ stock }: StockDetailsProps) {
 
   const summary =
     stock.longBusinessSummary || "No company description available.";
-  const MAX_CHARS = 250; // adjust as needed
+  const MAX_CHARS = 250;
 
   const isLong = summary.length > MAX_CHARS;
   const displayedText = expanded ? summary : summary.slice(0, MAX_CHARS);

@@ -9,6 +9,7 @@ interface SyncedStockChartsProps {
   data: HistoryPoint[];
   symbol?: string;
   period?: string;
+  interval?: string;
   change?: number;
   chartType: "line" | "candle";
 }
@@ -19,6 +20,7 @@ export default function SyncedStockCharts({
   period,
   change,
   chartType,
+  interval,
 }: SyncedStockChartsProps) {
   const sortedData = useMemo(
     () =>
@@ -57,6 +59,7 @@ export default function SyncedStockCharts({
           data={sortedData}
           change={change}
           period={period}
+          interval={interval}
           symbol={symbol}
           brushRange={brushRange}
           onBrushChange={handleBrushChange}
@@ -64,6 +67,8 @@ export default function SyncedStockCharts({
       ) : (
         <CandlestickChart
           data={sortedData}
+          period={period}
+          interval={interval}
           symbol={symbol}
           brushRange={brushRange}
           onBrushChange={handleBrushChange}

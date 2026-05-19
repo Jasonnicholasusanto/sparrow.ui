@@ -6,8 +6,13 @@ export const stockDataPaths = {
     `${Endpoints.Yfinance.Base}${
       Endpoints.Yfinance.Stocks.Base
     }${Endpoints.Yfinance.Stocks.Info(ticker)}`,
-  history: (ticker: string, interval: string, period: string) =>
+  history: (
+    ticker: string,
+    interval: string,
+    period: string,
+    includeExtendedHours: boolean = false,
+  ) =>
     `${Endpoints.Yfinance.Base}${
       Endpoints.Yfinance.Stocks.Base
-    }${Endpoints.Yfinance.Stocks.SimpleHistory(ticker, interval, period)}`,
+    }${Endpoints.Yfinance.Stocks.SimpleHistory(ticker, interval, period, includeExtendedHours)}`,
 };
