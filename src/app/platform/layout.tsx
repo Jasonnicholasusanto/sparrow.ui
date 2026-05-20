@@ -6,6 +6,7 @@ import FadeContent from "@/components/fade-content";
 import { getNavbarRoutes } from "@/lib/data/server/navbarRoutes";
 import { getMyWatchlists } from "@/lib/data/server/watchlist";
 import { PlatformProviders } from "@/providers/platform-providers";
+import { getFavouriteStocks } from "@/lib/data/server/favouriteStocks";
 
 type PlatformLayoutProps = {
   children: ReactNode;
@@ -14,12 +15,14 @@ type PlatformLayoutProps = {
 export default async function PlatformLayout({
   children,
 }: PlatformLayoutProps) {
-  const [user, authUser, navbarRoutes, watchlistsResponse] = await Promise.all([
-    getUserProfile(),
-    getAuthUser(),
-    getNavbarRoutes(),
-    getMyWatchlists(),
-  ]);
+  const [user, authUser, navbarRoutes, watchlistsResponse, favouriteStocks] =
+    await Promise.all([
+      getUserProfile(),
+      getAuthUser(),
+      getNavbarRoutes(),
+      getMyWatchlists(),
+      getFavouriteStocks(),
+    ]);
 
   return (
     <FadeContent blur={true} duration={2000} initialOpacity={0}>
@@ -28,6 +31,7 @@ export default async function PlatformLayout({
         authUser={authUser}
         navbarRoutes={navbarRoutes ?? []}
         watchlistsResponse={watchlistsResponse}
+        favouriteStocks={favouriteStocks}
       >
         <PlatformShell>{children}</PlatformShell>
       </PlatformProviders>
