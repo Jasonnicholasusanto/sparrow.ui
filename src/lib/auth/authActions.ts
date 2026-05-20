@@ -12,10 +12,12 @@ export interface LoginState {
 export async function loginGoogle() {
   const supabase = await createClient();
 
+  const redirectTo = `${environment.nextPublicSiteUrl}/auth/callback`;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: environment.googleOAuthRedirectUrl,
+      redirectTo: redirectTo,
       queryParams: {
         access_type: "offline",
         prompt: "consent",
@@ -66,7 +68,7 @@ export async function signup(formData: FormData) {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
     options: {
-      emailRedirectTo: `${window.location.origin}/platform`,
+      emailRedirectTo: `${environment.nextPublicSiteUrl}/platform`,
     },
   };
   const { error } = await supabase.auth.signUp(data);

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import {
   deleteWatchlistClient,
+  deleteWatchlistItemClient,
   getMyWatchlistsClient,
 } from "@/lib/data/client/watchlist";
 import type {
@@ -27,6 +28,7 @@ type WatchlistContextValue = {
   hasLoaded: boolean;
   refreshWatchlists: () => Promise<void>;
   deleteWatchlist: (watchlistId: number) => Promise<void>;
+  deleteWatchlistItem: (itemId: number) => Promise<void>;
   setWatchlistsResponse: React.Dispatch<
     React.SetStateAction<GetMyWatchlistsResponse | null>
   >;
@@ -102,6 +104,43 @@ export default function WatchlistProvider({
     }
   }, []);
 
+  const deleteWatchlistItem = useCallback(async (itemId: number) => {
+    try {
+      await deleteWatchlistItemClient(itemId);
+
+      setWatchlistsResponse((current) => {
+        if (!current?.results) return current;
+
+        const removeItemFromWatchlist = (
+          watchlist: WatchlistDetailOut,
+        ): WatchlistDetailOut => {
+          return {
+            ...watchlist,
+            items: watchlist.items?.filter((item) => item.id !== itemId) ?? [],
+          };
+        };
+
+        return {
+          ...current,
+          results: {
+            ...current.results,
+            created: current.results.created?.map(removeItemFromWatchlist),
+            forked: current.results.forked?.map(removeItemFromWatchlist),
+            shared: current.results.shared?.map(removeItemFromWatchlist),
+            bookmarked: current.results.bookmarked?.map(
+              removeItemFromWatchlist,
+            ),
+          },
+        };
+      });
+
+      toast.success("Removed from watchlist");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to remove item from watchlist");
+    }
+  }, []);
+
   useEffect(() => {
     if (!hasLoaded) {
       void refreshWatchlists();
@@ -133,6 +172,7 @@ export default function WatchlistProvider({
       hasLoaded,
       refreshWatchlists,
       deleteWatchlist,
+      deleteWatchlistItem,
       setWatchlistsResponse,
     }),
     [
@@ -142,6 +182,7 @@ export default function WatchlistProvider({
       hasLoaded,
       refreshWatchlists,
       deleteWatchlist,
+      deleteWatchlistItem,
       setWatchlistsResponse,
     ],
   );
