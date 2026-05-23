@@ -10,9 +10,10 @@ import { environment } from "@/lib/utils/env";
 import { StockInfoResponse } from "@/schemas/stock";
 import { convertEpochToDate } from "@/lib/utils/formatDates";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 export default function StockHeader({ stock }: { stock: StockInfoResponse }) {
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(stock.symbol);
 
   return (
     <motion.div

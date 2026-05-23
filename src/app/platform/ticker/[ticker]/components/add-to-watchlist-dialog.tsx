@@ -139,7 +139,7 @@ function SelectedTickerCard({ stock }: { stock: StockSummary }) {
   const postMarketChangePercent = stock.postMarketChangePercent;
   const displayName = stock.shortName || stock.longName || "Unknown company";
 
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(stock.symbol);
 
   return (
     <div className="rounded-2xl border bg-card/60 p-4">

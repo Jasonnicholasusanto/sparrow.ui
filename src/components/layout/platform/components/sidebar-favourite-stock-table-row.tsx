@@ -24,6 +24,7 @@ import { ListPlus, Loader2, SquareArrowOutUpRight } from "lucide-react";
 import { AddToWatchlistDialog } from "@/app/platform/ticker/[ticker]/components/add-to-watchlist-dialog";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type SidebarFavouriteStockTableRowProps = {
   stock: FavouriteStockResponse;
@@ -73,9 +74,7 @@ export function SidebarFavouriteStockTableRow({
   isRemoving = false,
 }: SidebarFavouriteStockTableRowProps) {
   const router = useRouter();
-
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
-
+  const logoUrl = getLogoUrl(stock.symbol);
   const lastPrice = getLastPrice(stock);
   const change = getChange(stock);
   const changePercent = getChangePercent(stock);

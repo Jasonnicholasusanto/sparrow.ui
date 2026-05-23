@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistCardProps = {
   watchlist: WatchlistDetailOut;
@@ -44,7 +45,7 @@ function TickerAvatarGroup({
   return (
     <div className="flex items-center">
       {visibleTickers.map((ticker, index) => {
-        const logoUrl = `${environment.logoKitTickerApiUrl}/${ticker.symbol}?token=${environment.logoKitTickerApiToken}`;
+        const logoUrl = getLogoUrl(ticker.symbol);
 
         return (
           <div key={`${ticker.symbol}-${index}`} className="-ml-2 first:ml-0">

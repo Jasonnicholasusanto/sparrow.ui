@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/tooltip";
 import { UpdateWatchlistItem, WatchlistItemOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistDetailsItemCardProps = {
   item: WatchlistItemOut;
@@ -121,7 +122,7 @@ export function WatchlistDetailsItemCard({
 
   const [note, setNote] = useState(item.note ?? "");
 
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(item.symbol);
 
   const tickerDetails = item.tickerDetails;
 
