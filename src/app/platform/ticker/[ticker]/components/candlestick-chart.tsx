@@ -224,7 +224,7 @@ export default function CandlestickChart({
         >
           <XAxis
             dataKey="timestamp"
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(iso) => formatXAxisLabel(iso, period)}
@@ -239,7 +239,7 @@ export default function CandlestickChart({
             }}
             tickCount={6}
             tickFormatter={(v) => v.toFixed(2)}
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}
             orientation="right"

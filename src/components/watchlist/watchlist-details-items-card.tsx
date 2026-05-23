@@ -5,11 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   Info,
   Loader2,
+  Pencil,
   NotepadText,
   SquareArrowOutUpRight,
   Trash2,
 } from "lucide-react";
 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,12 +37,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { WatchlistItemOut } from "@/schemas/watchlist";
+import { UpdateWatchlistItem, WatchlistItemOut } from "@/schemas/watchlist";
 import { environment } from "@/lib/utils/env";
 
 type WatchlistDetailsItemCardProps = {
   item: WatchlistItemOut;
   onRemove?: (itemId: number) => Promise<void> | void;
+  onUpdate?: (payload: UpdateWatchlistItem) => Promise<void> | void;
+  onNavigate?: () => void;
 };
 
 function formatNumber(
@@ -95,11 +101,25 @@ function MetricCell({
 export function WatchlistDetailsItemCard({
   item,
   onRemove,
+  onUpdate,
+  onNavigate,
 }: WatchlistDetailsItemCardProps) {
   const router = useRouter();
 
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
+
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  const [quantity, setQuantity] = useState(
+    item.quantity !== null && item.quantity !== undefined
+      ? String(item.quantity)
+      : "",
+  );
+
+  const [note, setNote] = useState(item.note ?? "");
 
   const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
 
@@ -123,6 +143,10 @@ export function WatchlistDetailsItemCard({
       : "text-red-600 dark:text-red-400";
 
   function handleNavigate() {
+    setDetailsOpen(false);
+    setNoteOpen(false);
+    setUpdateOpen(false);
+    onNavigate?.();
     router.push(`/platform/ticker/${item.symbol}`);
   }
 
@@ -134,6 +158,34 @@ export function WatchlistDetailsItemCard({
       await onRemove(item.id);
     } finally {
       setRemoving(false);
+    }
+  }
+
+  async function handleUpdate() {
+    if (!onUpdate) return;
+
+    const parsedQuantity = quantity.trim() === "" ? null : Number(quantity);
+
+    if (
+      parsedQuantity !== null &&
+      (Number.isNaN(parsedQuantity) || parsedQuantity < 0)
+    ) {
+      return;
+    }
+
+    const payload: UpdateWatchlistItem = {
+      quantity: parsedQuantity,
+      note: note.trim() === "" ? null : note.trim(),
+    };
+
+    try {
+      setUpdating(true);
+
+      await onUpdate(payload);
+
+      setUpdateOpen(false);
+    } finally {
+      setUpdating(false);
     }
   }
 
@@ -197,7 +249,7 @@ export function WatchlistDetailsItemCard({
               />
             </div>
 
-            <Dialog>
+            <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <DialogTrigger asChild>
@@ -261,6 +313,23 @@ export function WatchlistDetailsItemCard({
               View Details
             </ContextMenuItem>
           </ContextMenuGroup>
+
+          <ContextMenuItem
+            disabled={!onUpdate}
+            onSelect={(event) => {
+              event.preventDefault();
+              setQuantity(
+                item.quantity !== null && item.quantity !== undefined
+                  ? String(item.quantity)
+                  : "",
+              );
+              setNote(item.note ?? "");
+              setUpdateOpen(true);
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            Update {item.symbol}
+          </ContextMenuItem>
 
           <ContextMenuSeparator />
 
@@ -338,6 +407,71 @@ export function WatchlistDetailsItemCard({
               <span className={`font-medium ${changeClassName}`}>
                 {formatPercent(regularMarketChangePercent)}
               </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={updateOpen} onOpenChange={setUpdateOpen}>
+        <DialogContent className="min-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update {item.symbol}</DialogTitle>
+            <DialogDescription>
+              Update the quantity and note for this watchlist item.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor={`quantity-${item.id}`}>Quantity</Label>
+              <Input
+                id={`quantity-${item.id}`}
+                type="number"
+                min="0"
+                step="any"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                placeholder="Enter quantity"
+                disabled={updating}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`note-${item.id}`}>Note</Label>
+              <Textarea
+                id={`note-${item.id}`}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Add a note about this stock..."
+                disabled={updating}
+                className="min-h-32 resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUpdateOpen(false)}
+                disabled={updating}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => void handleUpdate()}
+                disabled={updating || !onUpdate}
+              >
+                {updating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  "Update item"
+                )}
+              </Button>
             </div>
           </div>
         </DialogContent>

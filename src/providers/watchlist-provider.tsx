@@ -12,13 +12,22 @@ import {
 import { toast } from "sonner";
 
 import {
+  addItemToWatchlistClient,
+  createWatchlistClient,
   deleteWatchlistClient,
   deleteWatchlistItemClient,
   getMyWatchlistsClient,
+  updateWatchlistClient,
+  updateWatchlistItemClient,
 } from "@/lib/data/client/watchlist";
+
 import type {
+  AddWatchlistItem,
+  CreatedWatchlistResponse,
   GetMyWatchlistsResponse,
+  WatchlistDetailCreatePayload,
   WatchlistDetailOut,
+  UpdateWatchlistItem,
 } from "@/schemas/watchlist";
 
 type WatchlistContextValue = {
@@ -26,9 +35,31 @@ type WatchlistContextValue = {
   watchlists: WatchlistDetailOut[];
   loading: boolean;
   hasLoaded: boolean;
+
   refreshWatchlists: () => Promise<void>;
+
+  createWatchlist: (
+    payload: WatchlistDetailCreatePayload,
+  ) => Promise<CreatedWatchlistResponse | null>;
+
+  updateWatchlist: (
+    watchlistId: number,
+    payload: WatchlistDetailCreatePayload,
+  ) => Promise<void>;
+
+  addItemToWatchlist: (
+    watchlistId: number,
+    payload: AddWatchlistItem,
+  ) => Promise<void>;
+
+  updateWatchlistItem: (
+    itemId: number,
+    payload: UpdateWatchlistItem,
+  ) => Promise<void>;
+
   deleteWatchlist: (watchlistId: number) => Promise<void>;
   deleteWatchlistItem: (itemId: number) => Promise<void>;
+
   setWatchlistsResponse: React.Dispatch<
     React.SetStateAction<GetMyWatchlistsResponse | null>
   >;
@@ -69,6 +100,78 @@ export default function WatchlistProvider({
       setLoading(false);
     }
   }, []);
+
+  const createWatchlist = useCallback(
+    async (
+      payload: WatchlistDetailCreatePayload,
+    ): Promise<CreatedWatchlistResponse | null> => {
+      try {
+        const res = await createWatchlistClient(payload);
+
+        await refreshWatchlists();
+
+        toast.success("Watchlist created");
+
+        return res;
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to create watchlist");
+        return null;
+      }
+    },
+    [refreshWatchlists],
+  );
+
+  const updateWatchlist = useCallback(
+    async (
+      watchlistId: number,
+      payload: WatchlistDetailCreatePayload,
+    ): Promise<void> => {
+      try {
+        await updateWatchlistClient(watchlistId, payload);
+
+        await refreshWatchlists();
+
+        toast.success("Watchlist updated");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to update watchlist");
+      }
+    },
+    [refreshWatchlists],
+  );
+
+  const addItemToWatchlist = useCallback(
+    async (watchlistId: number, payload: AddWatchlistItem): Promise<void> => {
+      try {
+        await addItemToWatchlistClient(watchlistId, payload);
+
+        await refreshWatchlists();
+
+        toast.success("Added to watchlist");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to add item to watchlist");
+      }
+    },
+    [refreshWatchlists],
+  );
+
+  const updateWatchlistItem = useCallback(
+    async (itemId: number, payload: UpdateWatchlistItem): Promise<void> => {
+      try {
+        await updateWatchlistItemClient(itemId, payload);
+
+        await refreshWatchlists();
+
+        toast.success("Watchlist item updated");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to update watchlist item");
+      }
+    },
+    [refreshWatchlists],
+  );
 
   const deleteWatchlist = useCallback(async (watchlistId: number) => {
     try {
@@ -170,9 +273,17 @@ export default function WatchlistProvider({
       watchlists,
       loading,
       hasLoaded,
+
       refreshWatchlists,
+
+      createWatchlist,
+      updateWatchlist,
+      addItemToWatchlist,
+      updateWatchlistItem,
+
       deleteWatchlist,
       deleteWatchlistItem,
+
       setWatchlistsResponse,
     }),
     [
@@ -180,9 +291,17 @@ export default function WatchlistProvider({
       watchlists,
       loading,
       hasLoaded,
+
       refreshWatchlists,
+
+      createWatchlist,
+      updateWatchlist,
+      addItemToWatchlist,
+      updateWatchlistItem,
+
       deleteWatchlist,
       deleteWatchlistItem,
+
       setWatchlistsResponse,
     ],
   );

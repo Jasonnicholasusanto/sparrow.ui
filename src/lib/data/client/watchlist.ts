@@ -4,6 +4,7 @@ import {
   AddWatchlistItem,
   CreatedWatchlistResponse,
   GetMyWatchlistsResponse,
+  UpdateWatchlistItem,
   WatchlistDetailCreatePayload,
 } from "@/schemas/watchlist";
 import { clientApiClient } from "@/lib/api/client";
@@ -83,6 +84,20 @@ export async function deleteWatchlistClient(watchlistId: number) {
     {
       method: "DELETE",
       version: Endpoints.Watchlists.BaseVersion,
+    },
+  );
+}
+
+export async function updateWatchlistItemClient(
+  itemId: number,
+  payload: UpdateWatchlistItem,
+): Promise<{ message: string }> {
+  return clientApiClient<{ message: string }>(
+    watchlistDataPaths.updateWatchlistItem(itemId),
+    {
+      method: "PATCH",
+      version: Endpoints.Watchlists.BaseVersion,
+      body: JSON.stringify(payload),
     },
   );
 }

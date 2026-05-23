@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { Globe, Lock, Users } from "lucide-react";
 
 import {
@@ -41,9 +42,10 @@ export function WatchlistDetailsDialog({
   isOwnProfile,
   onRefresh,
 }: WatchlistDetailsDialogProps) {
-  const { deleteWatchlistItem } = useWatchlists();
+  const { deleteWatchlistItem, updateWatchlistItem } = useWatchlists();
+  const [open, setOpen] = useState(false);
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent className="min-w-3xl max-w-5xl overflow-hidden">
@@ -86,6 +88,8 @@ export function WatchlistDetailsDialog({
                   key={item.id}
                   item={item}
                   onRemove={() => deleteWatchlistItem(item.id)}
+                  onUpdate={(payload) => updateWatchlistItem(item.id, payload)}
+                  onNavigate={() => setOpen(false)}
                 />
               ))
             ) : (

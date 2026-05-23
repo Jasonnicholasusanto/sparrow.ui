@@ -1,3 +1,5 @@
+import { TickerMarketSnapshotResponse } from "./tickerMarketSnapshot";
+
 export interface FavouriteStockResponse {
   id: number;
   symbol: string;
@@ -5,14 +7,7 @@ export interface FavouriteStockResponse {
   note?: string | null;
   createdAt: string;
   updatedAt: string;
-  tickerDetails: {
-    lastPrice: number | null;
-    currency: string | null;
-    volume: number | null;
-    previousClose: number | null;
-    regularMarketChange: number | null;
-    regularMarketChangePercent: number | null;
-  };
+  tickerDetails: TickerMarketSnapshotResponse;
 }
 
 export interface FavouriteStockRequest {
