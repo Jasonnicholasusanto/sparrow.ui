@@ -34,6 +34,8 @@ import {
 import { Input } from "@/components/ui/input";
 import type { QuoteResult, SearchQuotesResponse } from "@/schemas/search";
 import { searchQuotesClient } from "@/lib/data/client/search";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function SidebarSection({
   title,
@@ -189,6 +191,7 @@ function AddFavouriteStockDialog({
             {!loading
               ? results.map((stock) => {
                   const isAdding = addingSymbol === stock.symbol;
+                  const logoUrl = getLogoUrl(stock.symbol);
 
                   return (
                     <button
@@ -197,27 +200,44 @@ function AddFavouriteStockDialog({
                       onClick={() => void handleAdd(stock)}
                       disabled={isAdding}
                       className="
-                        flex w-full items-center justify-between rounded-2xl border p-3
+                        flex w-full items-center justify-between gap-3 rounded-2xl border p-3
                         text-left transition hover:bg-muted/60 disabled:cursor-not-allowed
-                        disabled:opacity-60
+                        disabled:opacity-60 cursor-pointer
                       "
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{stock.symbol}</span>
-                          {stock.exchange ? (
-                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                              {stock.exchange}
-                            </span>
-                          ) : null}
-                        </div>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="h-9 w-9 shrink-0 border-2 border-background">
+                          <AvatarImage
+                            src={logoUrl}
+                            alt={`${stock.symbol} logo`}
+                          />
+                          <AvatarFallback className="text-[10px] font-medium">
+                            {stock.symbol.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
 
-                        <p className="truncate text-sm text-muted-foreground">
-                          {stock.shortname ?? stock.longname ?? "Unknown name"}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="truncate font-semibold">
+                              {stock.symbol}
+                            </span>
+
+                            {stock.exchange ? (
+                              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                {stock.exchange}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <p className="truncate text-sm text-muted-foreground">
+                            {stock.shortname ??
+                              stock.longname ??
+                              "Unknown name"}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="ml-3 flex shrink-0 items-center gap-2 text-sm">
+                      <div className="flex shrink-0 items-center justify-center rounded-full bg-muted p-2 text-muted-foreground transition group-hover:bg-background">
                         {isAdding ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (

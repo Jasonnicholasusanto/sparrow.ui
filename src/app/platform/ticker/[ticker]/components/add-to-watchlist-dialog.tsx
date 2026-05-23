@@ -39,6 +39,7 @@ import type {
 } from "@/schemas/watchlist";
 import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 import { useWatchlists } from "@/providers/watchlist-provider";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistTickerPreview = {
   symbol: string;
@@ -105,7 +106,7 @@ function TickerAvatarGroup({
   return (
     <div className="flex items-center">
       {visibleTickers.map((ticker, index) => {
-        const logoUrl = `${environment.logoKitTickerApiUrl}/${ticker.symbol}?token=${environment.logoKitTickerApiToken}`;
+        const logoUrl = getLogoUrl(ticker.symbol);
 
         return (
           <div key={`${ticker.symbol}-${index}`} className="-ml-2 first:ml-0">
