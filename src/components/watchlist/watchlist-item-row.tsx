@@ -9,6 +9,7 @@ import { environment } from "@/lib/utils/env";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { QuoteResult } from "@/schemas/search";
 import { WatchlistRowItem } from "@/schemas/watchlist";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistItemRowProps = {
   item: WatchlistRowItem;
@@ -80,7 +81,7 @@ export function WatchlistItemRow({
 }: WatchlistItemRowProps) {
   const isPositive = (item.marketChange ?? 0) >= 0;
 
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(item.symbol);
   const displayName = item.displayName || item.symbol;
   const regularMarketChangePercent = item.marketChangePercent;
 

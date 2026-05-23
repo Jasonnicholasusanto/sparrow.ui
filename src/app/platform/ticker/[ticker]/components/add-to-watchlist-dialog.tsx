@@ -32,16 +32,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { environment } from "@/lib/utils/env";
 import { cn } from "@/lib/utils";
-import {
-  addItemToWatchlistClient,
-  getMyWatchlistsClient,
-} from "@/lib/data/client/watchlist";
 import type {
   AddWatchlistItem,
-  GetMyWatchlistsResponse,
+  UpdateWatchlistItem,
   WatchlistDetailOut,
 } from "@/schemas/watchlist";
 import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
+import { useWatchlists } from "@/providers/watchlist-provider";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistTickerPreview = {
   symbol: string;
@@ -108,7 +106,7 @@ function TickerAvatarGroup({
   return (
     <div className="flex items-center">
       {visibleTickers.map((ticker, index) => {
-        const logoUrl = `${environment.logoKitTickerApiUrl}/${ticker.symbol}?token=${environment.logoKitTickerApiToken}`;
+        const logoUrl = getLogoUrl(ticker.symbol);
 
         return (
           <div key={`${ticker.symbol}-${index}`} className="-ml-2 first:ml-0">
@@ -141,7 +139,7 @@ function SelectedTickerCard({ stock }: { stock: StockSummary }) {
   const postMarketChangePercent = stock.postMarketChangePercent;
   const displayName = stock.shortName || stock.longName || "Unknown company";
 
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(stock.symbol);
 
   return (
     <div className="rounded-2xl border bg-card/60 p-4">
@@ -328,12 +326,17 @@ function AddItemDetailsDialog({
   watchlist,
   stock,
   onSubmitted,
+  addItemToWatchlist,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   watchlist: WatchlistDetailOut;
   stock: StockSummary;
   onSubmitted: () => void;
+  addItemToWatchlist: (
+    watchlistId: number,
+    payload: AddWatchlistItem,
+  ) => Promise<void>;
 }) {
   const [quantity, setQuantity] = useState<string>("");
   const [note, setNote] = useState("");
@@ -371,7 +374,7 @@ function AddItemDetailsDialog({
     try {
       setIsSubmitting(true);
 
-      await addItemToWatchlistClient(watchlist.id, payload);
+      await addItemToWatchlist(watchlist.id, payload);
 
       toast.success(`${stock.symbol} added to "${watchlist.name}"`);
       onOpenChange(false);
@@ -471,11 +474,16 @@ function WatchlistRow({
   watchlistType,
   stock,
   onAdded,
+  addItemToWatchlist,
 }: {
   watchlist: WatchlistDetailOut;
   watchlistType: WatchlistSectionKey;
   stock: StockSummary;
   onAdded: () => void;
+  addItemToWatchlist: (
+    watchlistId: number,
+    payload: AddWatchlistItem,
+  ) => Promise<void>;
 }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
@@ -538,6 +546,7 @@ function WatchlistRow({
         watchlist={watchlist}
         stock={stock}
         onSubmitted={onAdded}
+        addItemToWatchlist={addItemToWatchlist}
       />
     </>
   );
@@ -549,12 +558,17 @@ function WatchlistSection({
   watchlists,
   stock,
   onAdded,
+  addItemToWatchlist,
 }: {
   title: string;
   type: WatchlistSectionKey;
   watchlists: WatchlistDetailOut[];
   stock: StockSummary;
   onAdded: () => void;
+  addItemToWatchlist: (
+    watchlistId: number,
+    payload: AddWatchlistItem,
+  ) => Promise<void>;
 }) {
   if (!watchlists.length) return null;
 
@@ -571,6 +585,7 @@ function WatchlistSection({
           watchlistType={type}
           stock={stock}
           onAdded={onAdded}
+          addItemToWatchlist={addItemToWatchlist}
         />
       ))}
     </div>
@@ -594,14 +609,28 @@ export function AddToWatchlistDialog({
       setInternalOpen(nextOpen);
     }
   }
-  const [loading, setLoading] = useState(false);
-  const [watchlistsResponse, setWatchlistsResponse] =
-    useState<GetMyWatchlistsResponse | null>(null);
+
+  const {
+    watchlistsResponse,
+    loading,
+    hasLoaded,
+    refreshWatchlists,
+    addItemToWatchlist,
+  } = useWatchlists();
+
+  useEffect(() => {
+    if (!open) return;
+    if (hasLoaded) return;
+
+    void refreshWatchlists();
+  }, [open, hasLoaded, refreshWatchlists]);
+
+  const grouped = watchlistsResponse?.results;
 
   const hasAnyWatchlists = useMemo(() => {
-    if (!watchlistsResponse?.results) return false;
+    if (!grouped) return false;
 
-    const { created, forked, shared, bookmarked } = watchlistsResponse.results;
+    const { created, forked, shared, bookmarked } = grouped;
 
     return (
       created.length > 0 ||
@@ -609,28 +638,7 @@ export function AddToWatchlistDialog({
       shared.length > 0 ||
       bookmarked.length > 0
     );
-  }, [watchlistsResponse]);
-
-  async function loadWatchlists() {
-    try {
-      setLoading(true);
-      const res = await getMyWatchlistsClient();
-      setWatchlistsResponse(res);
-    } catch (error) {
-      console.error(error);
-      setWatchlistsResponse(null);
-      toast.error("Failed to load watchlists");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!open) return;
-    void loadWatchlists();
-  }, [open]);
-
-  const grouped = watchlistsResponse?.results;
+  }, [grouped]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -678,7 +686,10 @@ export function AddToWatchlistDialog({
                 ))}
               </>
             ) : !hasAnyWatchlists ? (
-              <EmptyWatchlistsState onCreated={loadWatchlists} stock={stock} />
+              <EmptyWatchlistsState
+                onCreated={refreshWatchlists}
+                stock={stock}
+              />
             ) : (
               <>
                 <WatchlistSection
@@ -686,7 +697,8 @@ export function AddToWatchlistDialog({
                   type="created"
                   watchlists={grouped?.created ?? []}
                   stock={stock}
-                  onAdded={loadWatchlists}
+                  onAdded={refreshWatchlists}
+                  addItemToWatchlist={addItemToWatchlist}
                 />
 
                 <WatchlistSection
@@ -694,7 +706,8 @@ export function AddToWatchlistDialog({
                   type="forked"
                   watchlists={grouped?.forked ?? []}
                   stock={stock}
-                  onAdded={loadWatchlists}
+                  onAdded={refreshWatchlists}
+                  addItemToWatchlist={addItemToWatchlist}
                 />
 
                 <WatchlistSection
@@ -702,7 +715,8 @@ export function AddToWatchlistDialog({
                   type="shared"
                   watchlists={grouped?.shared ?? []}
                   stock={stock}
-                  onAdded={loadWatchlists}
+                  onAdded={refreshWatchlists}
+                  addItemToWatchlist={addItemToWatchlist}
                 />
 
                 <WatchlistSection
@@ -710,7 +724,8 @@ export function AddToWatchlistDialog({
                   type="bookmarked"
                   watchlists={grouped?.bookmarked ?? []}
                   stock={stock}
-                  onAdded={loadWatchlists}
+                  onAdded={refreshWatchlists}
+                  addItemToWatchlist={addItemToWatchlist}
                 />
               </>
             )}

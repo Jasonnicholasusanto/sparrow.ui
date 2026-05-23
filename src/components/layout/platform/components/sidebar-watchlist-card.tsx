@@ -20,6 +20,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type SidebarWatchlistCardProps = {
   watchlist: WatchlistDetailOut;
@@ -84,10 +85,6 @@ function getVisibilityLabel(visibility?: string | null) {
   if (!visibility) return "Unknown";
 
   return visibility.charAt(0).toUpperCase() + visibility.slice(1);
-}
-
-function getLogoUrl(symbol: string) {
-  return `${environment.logoKitTickerApiUrl}/${symbol}?token=${environment.logoKitTickerApiToken}`;
 }
 
 function ChangeBadge({ value }: { value: number | null }) {

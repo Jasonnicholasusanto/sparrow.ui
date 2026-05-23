@@ -32,6 +32,7 @@ export const Endpoints = {
     WatchlistItems: (watchlistId: number) => `/${watchlistId}/items`,
     AddWatchlistItem: (watchlistId: number) => `/${watchlistId}/add-item`,
     AddWatchlistItemsBulk: (watchlistId: number) => `/${watchlistId}/add-items`,
+    UpdateWatchlistItem: (itemId: number) => `/item/${itemId}`,
     DeleteWatchlistItem: (itemId: number) => `/item/${itemId}`,
     DeleteWatchlist: (watchlistId: number) => `/${watchlistId}`,
   },

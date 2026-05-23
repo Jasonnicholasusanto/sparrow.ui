@@ -7,6 +7,11 @@ import {
 import { FavouriteStockResponse } from "@/schemas/favouriteStock";
 import { useRouter } from "next/dist/client/components/navigation";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuGroup,
@@ -19,6 +24,7 @@ import { ListPlus, Loader2, SquareArrowOutUpRight } from "lucide-react";
 import { AddToWatchlistDialog } from "@/app/platform/ticker/[ticker]/components/add-to-watchlist-dialog";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type SidebarFavouriteStockTableRowProps = {
   stock: FavouriteStockResponse;
@@ -68,9 +74,7 @@ export function SidebarFavouriteStockTableRow({
   isRemoving = false,
 }: SidebarFavouriteStockTableRowProps) {
   const router = useRouter();
-
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${stock.symbol}?token=${environment.logoKitTickerApiToken}`;
-
+  const logoUrl = getLogoUrl(stock.symbol);
   const lastPrice = getLastPrice(stock);
   const change = getChange(stock);
   const changePercent = getChangePercent(stock);
@@ -95,45 +99,54 @@ export function SidebarFavouriteStockTableRow({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <TableRow
-          onClick={handleNavigate}
-          className="cursor-pointer select-none"
-        >
-          <TableCell className="flex flex-row items-center gap-2">
-            <Avatar className="h-7 w-7 rounded-xl border bg-background">
-              <AvatarImage src={logoUrl} alt={`${stock.symbol} logo`} />
-              <AvatarFallback className="rounded-xl text-md font-semibold">
-                {stock.symbol.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+        <Tooltip delayDuration={500}>
+          <TooltipTrigger asChild>
+            <TableRow
+              onClick={handleNavigate}
+              className="cursor-pointer select-none"
+            >
+              <TableCell className="flex flex-row items-center gap-2">
+                <Avatar className="h-7 w-7 rounded-xl border bg-background">
+                  <AvatarImage src={logoUrl} alt={`${stock.symbol} logo`} />
+                  <AvatarFallback className="rounded-xl text-md font-semibold">
+                    {stock.symbol.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
 
-            <div className="min-w-0">
-              <div className="truncate text-sm font-bold">{stock.symbol}</div>
-            </div>
-          </TableCell>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold">
+                    {stock.symbol}
+                  </div>
+                </div>
+              </TableCell>
 
-          <TableCell className={"truncate text-right text-xs font-medium"}>
-            {lastPrice !== null ? formatPrice(lastPrice) : "—"}
-          </TableCell>
+              <TableCell className={"truncate text-right text-xs font-medium"}>
+                {lastPrice !== null ? formatPrice(lastPrice) : "—"}
+              </TableCell>
 
-          <TableCell
-            className={cn(
-              "truncate text-right text-xs font-medium",
-              changeClassName,
-            )}
-          >
-            {formatChange(change)}
-          </TableCell>
+              <TableCell
+                className={cn(
+                  "truncate text-right text-xs font-medium",
+                  changeClassName,
+                )}
+              >
+                {formatChange(change)}
+              </TableCell>
 
-          <TableCell
-            className={cn(
-              "truncate text-right text-xs font-medium",
-              changeClassName,
-            )}
-          >
-            {formatPercent(changePercent)}
-          </TableCell>
-        </TableRow>
+              <TableCell
+                className={cn(
+                  "truncate text-right text-xs font-medium",
+                  changeClassName,
+                )}
+              >
+                {formatPercent(changePercent)}
+              </TableCell>
+            </TableRow>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{stock.tickerDetails.tickerName}</p>
+          </TooltipContent>
+        </Tooltip>
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-52">

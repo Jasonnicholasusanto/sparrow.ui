@@ -22,6 +22,10 @@ export const watchlistDataPaths = {
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlist(
       watchlistId,
     ).replace("{watchlistId}", String(watchlistId))}`,
+  updateWatchlistItem: (itemId: number) =>
+    `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.UpdateWatchlistItem(
+      itemId,
+    ).replace("{itemId}", String(itemId))}`,
   deleteItem: (itemId: number) =>
     `${Endpoints.Watchlists.Base}${Endpoints.Watchlists.DeleteWatchlistItem(
       itemId,

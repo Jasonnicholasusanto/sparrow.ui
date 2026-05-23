@@ -7,6 +7,7 @@ import { QuoteResult } from "@/schemas/search";
 import { environment } from "@/lib/utils/env";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 interface SearchResultsProps {
   results: QuoteResult[];
@@ -21,7 +22,7 @@ function SearchResultItem({
   item: QuoteResult;
   onSelect?: (result: QuoteResult) => void;
 }) {
-  const logoUrl = `${environment.logoKitTickerApiUrl}/${item.symbol}?token=${environment.logoKitTickerApiToken}`;
+  const logoUrl = getLogoUrl(item.symbol);
 
   const isPositive =
     typeof item.regularMarketChangePercent === "number"

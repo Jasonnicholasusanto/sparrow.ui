@@ -1,4 +1,5 @@
 import { Tags } from "./tags";
+import { TickerMarketSnapshotResponse } from "./tickerMarketSnapshot";
 
 export interface WatchlistOut {
   id: number;
@@ -109,15 +110,6 @@ export interface WatchlistRowItem {
   marketChangePercent?: number | null;
 }
 
-export interface TickerMarketSnapshotResponse {
-  lastPrice: number | null;
-  currency: string | null;
-  volume: number | null;
-  previousClose: number | null;
-  regularMarketChange: number | null;
-  regularMarketChangePercent: number | null;
-}
-
 export interface TickerDetails extends TickerMarketSnapshotResponse {
   symbol: string;
 }
@@ -138,6 +130,15 @@ export interface WatchlistItem {
 export interface AddWatchlistItem {
   symbol: string;
   exchange: string;
+  note?: string | null;
+  position?: number | null;
+  quantity?: number | null;
+  referencePrice?: number | null;
+}
+
+export interface UpdateWatchlistItem {
+  symbol?: string;
+  exchange?: string;
   note?: string | null;
   position?: number | null;
   quantity?: number | null;
