@@ -97,10 +97,10 @@ export function SidebarFavouriteStockTableRow({
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <Tooltip delayDuration={500}>
-          <TooltipTrigger asChild>
+    <Tooltip delayDuration={500}>
+      <ContextMenu>
+        <TooltipTrigger asChild>
+          <ContextMenuTrigger asChild>
             <TableRow
               onClick={handleNavigate}
               className="cursor-pointer select-none"
@@ -120,7 +120,7 @@ export function SidebarFavouriteStockTableRow({
                 </div>
               </TableCell>
 
-              <TableCell className={"truncate text-right text-xs font-medium"}>
+              <TableCell className="truncate text-right text-xs font-medium">
                 {lastPrice !== null ? formatPrice(lastPrice) : "—"}
               </TableCell>
 
@@ -142,68 +142,69 @@ export function SidebarFavouriteStockTableRow({
                 {formatPercent(changePercent)}
               </TableCell>
             </TableRow>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p>{stock.tickerDetails.tickerName}</p>
-          </TooltipContent>
-        </Tooltip>
-      </ContextMenuTrigger>
+          </ContextMenuTrigger>
+        </TooltipTrigger>
 
-      <ContextMenuContent className="w-52">
-        <ContextMenuGroup>
-          <ContextMenuItem
-            onSelect={(event) => {
-              event.preventDefault();
-              handleNavigate();
-            }}
-          >
-            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
-            View {stock.symbol}
-          </ContextMenuItem>
-        </ContextMenuGroup>
+        <ContextMenuContent className="w-52">
+          <ContextMenuGroup>
+            <ContextMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                handleNavigate();
+              }}
+            >
+              <SquareArrowOutUpRight className="mr-2 h-4 w-4" />
+              View {stock.symbol}
+            </ContextMenuItem>
+          </ContextMenuGroup>
 
-        <ContextMenuGroup>
-          <AddToWatchlistDialog
-            stock={{
-              symbol: stock.symbol,
-              market: stock.exchange,
-              currency: stock.tickerDetails?.currency,
-            }}
-            trigger={
-              <ContextMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
-                }}
-              >
-                <ListPlus className="mr-2 h-4 w-4" />
-                Add to watchlist
-              </ContextMenuItem>
-            }
-          />
-        </ContextMenuGroup>
+          <ContextMenuGroup>
+            <AddToWatchlistDialog
+              stock={{
+                symbol: stock.symbol,
+                market: stock.exchange,
+                currency: stock.tickerDetails?.currency,
+              }}
+              trigger={
+                <ContextMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault();
+                  }}
+                >
+                  <ListPlus className="mr-2 h-4 w-4" />
+                  Add to watchlist
+                </ContextMenuItem>
+              }
+            />
+          </ContextMenuGroup>
 
-        <ContextMenuSeparator />
+          <ContextMenuSeparator />
 
-        <ContextMenuGroup>
-          <ContextMenuItem
-            variant="destructive"
-            disabled={isRemoving}
-            onSelect={(event) => {
-              event.preventDefault();
-              void handleRemove();
-            }}
-          >
-            {isRemoving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Removing...
-              </>
-            ) : (
-              <>Remove from favourites</>
-            )}
-          </ContextMenuItem>
-        </ContextMenuGroup>
-      </ContextMenuContent>
-    </ContextMenu>
+          <ContextMenuGroup>
+            <ContextMenuItem
+              variant="destructive"
+              disabled={isRemoving}
+              onSelect={(event) => {
+                event.preventDefault();
+                void handleRemove();
+              }}
+            >
+              {isRemoving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>Remove from favourites</>
+              )}
+            </ContextMenuItem>
+          </ContextMenuGroup>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <TooltipContent side="left">
+        <p>{stock.tickerDetails?.tickerName ?? stock.symbol}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }

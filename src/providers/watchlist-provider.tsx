@@ -50,7 +50,7 @@ type WatchlistContextValue = {
   addItemToWatchlist: (
     watchlistId: number,
     payload: AddWatchlistItem,
-  ) => Promise<void>;
+  ) => Promise<"success" | "error">;
 
   updateWatchlistItem: (
     itemId: number,
@@ -142,16 +142,22 @@ export default function WatchlistProvider({
   );
 
   const addItemToWatchlist = useCallback(
-    async (watchlistId: number, payload: AddWatchlistItem): Promise<void> => {
+    async (
+      watchlistId: number,
+      payload: AddWatchlistItem,
+    ): Promise<"success" | "error"> => {
       try {
         await addItemToWatchlistClient(watchlistId, payload);
 
         await refreshWatchlists();
 
         toast.success("Added to watchlist");
+
+        return "success";
       } catch (error) {
         console.error(error);
         toast.error("Failed to add item to watchlist");
+        return "error";
       }
     },
     [refreshWatchlists],
@@ -177,28 +183,30 @@ export default function WatchlistProvider({
     try {
       await deleteWatchlistClient(watchlistId);
 
-      setWatchlistsResponse((current) => {
-        if (!current?.results) return current;
+      await refreshWatchlists();
 
-        return {
-          ...current,
-          results: {
-            ...current.results,
-            created: current.results.created?.filter(
-              (watchlist) => watchlist.id !== watchlistId,
-            ),
-            forked: current.results.forked?.filter(
-              (watchlist) => watchlist.id !== watchlistId,
-            ),
-            shared: current.results.shared?.filter(
-              (watchlist) => watchlist.id !== watchlistId,
-            ),
-            bookmarked: current.results.bookmarked?.filter(
-              (watchlist) => watchlist.id !== watchlistId,
-            ),
-          },
-        };
-      });
+      // setWatchlistsResponse((current) => {
+      //   if (!current?.results) return current;
+
+      //   return {
+      //     ...current,
+      //     results: {
+      //       ...current.results,
+      //       created: current.results.created?.filter(
+      //         (watchlist) => watchlist.id !== watchlistId,
+      //       ),
+      //       forked: current.results.forked?.filter(
+      //         (watchlist) => watchlist.id !== watchlistId,
+      //       ),
+      //       shared: current.results.shared?.filter(
+      //         (watchlist) => watchlist.id !== watchlistId,
+      //       ),
+      //       bookmarked: current.results.bookmarked?.filter(
+      //         (watchlist) => watchlist.id !== watchlistId,
+      //       ),
+      //     },
+      //   };
+      // });
 
       toast.success("Watchlist deleted");
     } catch (error) {

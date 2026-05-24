@@ -26,8 +26,10 @@ import {
 } from "@/components/ui/context-menu";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -38,7 +40,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UpdateWatchlistItem, WatchlistItemOut } from "@/schemas/watchlist";
-import { environment } from "@/lib/utils/env";
 import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistDetailsItemCardProps = {
@@ -95,6 +96,48 @@ function MetricCell({
     <div className="min-w-0 text-right">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`truncate font-medium ${className ?? ""}`}>{value}</p>
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="rounded-2xl border bg-muted/30 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-2 truncate text-lg font-semibold ${valueClassName ?? ""}`}
+      >
+        {value ?? "—"}
+      </p>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b pb-2 last:border-b-0 last:pb-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`text-right font-medium ${valueClassName ?? ""}`}>
+        {value ?? "—"}
+      </span>
     </div>
   );
 }
@@ -207,23 +250,30 @@ export function WatchlistDetailsItemCard({
               }}
               className="grid cursor-pointer grid-cols-6 items-center gap-4"
             >
-              <div className="flex w-lg flex-row gap-3">
-                <Avatar className="h-10 w-10 rounded-xl border bg-background">
-                  <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
-                  <AvatarFallback className="rounded-xl text-xs font-semibold">
-                    {item.symbol.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+              <Tooltip delayDuration={500}>
+                <TooltipTrigger asChild>
+                  <div className="flex w-lg flex-row gap-3">
+                    <Avatar className="h-10 w-10 rounded-xl border bg-background">
+                      <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
+                      <AvatarFallback className="rounded-xl text-xs font-semibold">
+                        {item.symbol.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
 
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{item.symbol}</p>
-                  {item.exchange ? (
-                    <p className="truncate text-xs text-muted-foreground">
-                      {item.exchange}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{item.symbol}</p>
+                      {item.exchange ? (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {item.exchange}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{tickerDetails?.tickerName}</p>
+                </TooltipContent>
+              </Tooltip>
 
               <MetricCell label="Currency" value={currency ?? "—"} />
 
@@ -360,56 +410,186 @@ export function WatchlistDetailsItemCard({
       </ContextMenu>
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="min-w-lg">
-          <DialogHeader>
-            <DialogTitle>{item.symbol} details</DialogTitle>
-            <DialogDescription>
-              Detailed watchlist item information.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-5xl min-w-4xl rounded-3xl">
+          <div className="border-b py-4">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-5">
+                  <Avatar className="w-13 h-13">
+                    <AvatarImage
+                      src={logoUrl}
+                      alt={`${item.tickerDetails?.tickerName || item.symbol} logo`}
+                      loading="lazy"
+                    />
+                    <AvatarFallback className="text-xs font-medium">
+                      {item.symbol?.charAt(0).toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col gap-2">
+                    <h1 className="text-xl font-bold tracking-tight">
+                      {item.tickerDetails?.tickerName || item.symbol}
+                    </h1>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-muted-foreground text-xs">
+                        {item.symbol}
+                      </p>
+                      <p className="text-muted-foreground text-xs">&bull;</p>
+                      <p className="text-muted-foreground text-xs">
+                        {item.exchange || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-          <div className="space-y-3 rounded-xl border bg-muted/30 p-4 text-sm">
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Symbol</span>
-              <span className="font-medium">{item.symbol}</span>
-            </div>
+                <div className="text-right">
+                  <p className="text-2xl font-semibold">
+                    {formatCurrency(lastPrice, currency)}
+                  </p>
 
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Exchange</span>
-              <span className="font-medium">{item.exchange ?? "—"}</span>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Currency</span>
-              <span className="font-medium">{currency ?? "—"}</span>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Quantity</span>
-              <span className="font-medium">{formatNumber(item.quantity)}</span>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Last price</span>
-              <span className="font-medium">
-                {formatCurrency(lastPrice, currency)}
-              </span>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Change</span>
-              <span className={`font-medium ${changeClassName}`}>
-                {formatChange(regularMarketChange)}
-              </span>
-            </div>
-
-            <div className="flex justify-between gap-4">
-              <span className="text-muted-foreground">Change %</span>
-              <span className={`font-medium ${changeClassName}`}>
-                {formatPercent(regularMarketChangePercent)}
-              </span>
-            </div>
+                  <div
+                    className={`mt-1 flex items-center justify-end gap-2 text-sm font-medium ${changeClassName}`}
+                  >
+                    <span>{formatChange(regularMarketChange)}</span>
+                    <span>{formatPercent(regularMarketChangePercent)}</span>
+                  </div>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
           </div>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                label="Market value"
+                value={formatCurrency(
+                  item.positionDetails?.marketValue,
+                  currency,
+                )}
+              />
+
+              <MetricCard
+                label="Quantity"
+                value={formatNumber(item.quantity)}
+              />
+
+              <MetricCard
+                label="Last price"
+                value={formatCurrency(lastPrice, currency)}
+              />
+
+              <MetricCard
+                label="Day change"
+                value={formatCurrency(
+                  item.positionDetails?.dayChangeValue,
+                  currency,
+                )}
+                valueClassName={changeClassName}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border bg-card p-4">
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold">Position details</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Based on your saved quantity and the latest market snapshot.
+                  </p>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <DetailRow
+                    label="Quantity"
+                    value={formatNumber(item.quantity)}
+                  />
+
+                  <DetailRow
+                    label="Market value"
+                    value={formatCurrency(
+                      item.positionDetails?.marketValue,
+                      currency,
+                    )}
+                  />
+
+                  <DetailRow
+                    label="Previous value"
+                    value={formatCurrency(
+                      item.positionDetails?.previousMarketValue,
+                      currency,
+                    )}
+                  />
+
+                  <DetailRow
+                    label="Day change"
+                    value={formatCurrency(
+                      item.positionDetails?.dayChangeValue,
+                      currency,
+                    )}
+                    valueClassName={changeClassName}
+                  />
+
+                  <DetailRow
+                    label="Day change %"
+                    value={formatPercent(
+                      item.positionDetails?.dayChangePercent ??
+                        regularMarketChangePercent,
+                    )}
+                    valueClassName={changeClassName}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border bg-card p-4">
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold">Market snapshot</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Latest available price data for this ticker.
+                  </p>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <DetailRow label="Symbol" value={item.symbol} />
+
+                  <DetailRow label="Exchange" value={item.exchange ?? "—"} />
+
+                  <DetailRow label="Currency" value={currency ?? "—"} />
+
+                  <DetailRow
+                    label="Last price"
+                    value={formatCurrency(lastPrice, currency)}
+                  />
+
+                  <DetailRow
+                    label="Previous close"
+                    value={formatCurrency(
+                      item.tickerDetails?.previousClose,
+                      currency,
+                    )}
+                  />
+
+                  <DetailRow
+                    label="Volume"
+                    value={formatNumber(item.tickerDetails?.volume)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {item.note ? (
+              <div className="rounded-2xl border bg-muted/30 p-4">
+                <h4 className="mb-2 text-sm font-semibold">Note</h4>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {item.note}
+                </p>
+              </div>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
