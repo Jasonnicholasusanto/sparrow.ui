@@ -43,3 +43,17 @@ export function convertEpochToShortDate(
   // Example result: "04 Nov 2025"
   return new Intl.DateTimeFormat("en-AU", options).format(date);
 }
+
+export function formatWatchlistDate(value?: string | Date | null) {
+  if (!value) return "N/A";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "N/A";
+
+  return new Intl.DateTimeFormat("en-AU", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}

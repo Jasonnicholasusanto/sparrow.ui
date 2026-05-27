@@ -39,13 +39,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { UpdateWatchlistItem, WatchlistItemOut } from "@/schemas/watchlist";
+import {
+  UpdateWatchlistItem,
+  WatchlistItemApiResponse,
+  WatchlistItemOut,
+} from "@/schemas/watchlist";
 import { getLogoUrl } from "@/lib/utils/tickerLogo";
 
 type WatchlistDetailsItemCardProps = {
   item: WatchlistItemOut;
-  onRemove?: (itemId: number) => Promise<void> | void;
-  onUpdate?: (payload: UpdateWatchlistItem) => Promise<void> | void;
+  onRemove?: (itemId: number) => Promise<WatchlistItemApiResponse> | void;
+  onUpdate?: (
+    payload: UpdateWatchlistItem,
+  ) => Promise<WatchlistItemApiResponse> | void;
   onNavigate?: () => void;
 };
 

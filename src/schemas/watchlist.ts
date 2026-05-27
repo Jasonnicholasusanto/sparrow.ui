@@ -75,6 +75,16 @@ export interface WatchlistItemOut extends WatchlistItemBase {
   positionDetails: WatchlistItemPositionDetails;
 }
 
+export interface WatchlistItemApiResponse {
+  message: string;
+  item: WatchlistItemOut | null;
+}
+
+export interface AddWatchlistItemBulkApiResponse {
+  count: number;
+  items: WatchlistItemOut[] | [];
+}
+
 export interface WatchlistDetailCreatePayload {
   watchlist_data: {
     name: string;

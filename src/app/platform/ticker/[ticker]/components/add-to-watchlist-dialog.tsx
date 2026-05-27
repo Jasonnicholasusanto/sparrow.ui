@@ -30,12 +30,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { environment } from "@/lib/utils/env";
 import { cn } from "@/lib/utils";
 import type {
   AddWatchlistItem,
-  UpdateWatchlistItem,
   WatchlistDetailOut,
+  WatchlistItemApiResponse,
 } from "@/schemas/watchlist";
 import { WatchlistDialog } from "@/components/watchlist/watchlist-dialog";
 import { useWatchlists } from "@/providers/watchlist-provider";
@@ -336,7 +335,7 @@ function AddItemDetailsDialog({
   addItemToWatchlist: (
     watchlistId: number,
     payload: AddWatchlistItem,
-  ) => Promise<void>;
+  ) => Promise<WatchlistItemApiResponse>;
 }) {
   const [quantity, setQuantity] = useState<string>("");
   const [note, setNote] = useState("");
@@ -483,7 +482,7 @@ function WatchlistRow({
   addItemToWatchlist: (
     watchlistId: number,
     payload: AddWatchlistItem,
-  ) => Promise<void>;
+  ) => Promise<WatchlistItemApiResponse>;
 }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
@@ -568,7 +567,7 @@ function WatchlistSection({
   addItemToWatchlist: (
     watchlistId: number,
     payload: AddWatchlistItem,
-  ) => Promise<void>;
+  ) => Promise<WatchlistItemApiResponse>;
 }) {
   if (!watchlists.length) return null;
 

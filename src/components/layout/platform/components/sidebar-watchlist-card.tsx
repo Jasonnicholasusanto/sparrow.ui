@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { WatchlistDetailOut } from "@/schemas/watchlist";
-import { environment } from "@/lib/utils/env";
 import { WatchlistDetailsDialog } from "@/components/watchlist/watchlist-details-dialog";
 import {
   ContextMenu,

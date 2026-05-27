@@ -28,6 +28,7 @@ import type {
   WatchlistDetailCreatePayload,
   WatchlistDetailOut,
   UpdateWatchlistItem,
+  WatchlistItemApiResponse,
 } from "@/schemas/watchlist";
 
 type WatchlistContextValue = {
@@ -45,20 +46,20 @@ type WatchlistContextValue = {
   updateWatchlist: (
     watchlistId: number,
     payload: WatchlistDetailCreatePayload,
-  ) => Promise<void>;
+  ) => Promise<WatchlistDetailOut | null>;
 
   addItemToWatchlist: (
     watchlistId: number,
     payload: AddWatchlistItem,
-  ) => Promise<"success" | "error">;
+  ) => Promise<WatchlistItemApiResponse>;
 
   updateWatchlistItem: (
     itemId: number,
     payload: UpdateWatchlistItem,
-  ) => Promise<void>;
+  ) => Promise<WatchlistItemApiResponse>;
 
   deleteWatchlist: (watchlistId: number) => Promise<void>;
-  deleteWatchlistItem: (itemId: number) => Promise<void>;
+  deleteWatchlistItem: (itemId: number) => Promise<WatchlistItemApiResponse>;
 
   setWatchlistsResponse: React.Dispatch<
     React.SetStateAction<GetMyWatchlistsResponse | null>
@@ -126,16 +127,19 @@ export default function WatchlistProvider({
     async (
       watchlistId: number,
       payload: WatchlistDetailCreatePayload,
-    ): Promise<void> => {
+    ): Promise<WatchlistDetailOut | null> => {
       try {
-        await updateWatchlistClient(watchlistId, payload);
+        const res = await updateWatchlistClient(watchlistId, payload);
 
         await refreshWatchlists();
 
         toast.success("Watchlist updated");
+
+        return res;
       } catch (error) {
         console.error(error);
         toast.error("Failed to update watchlist");
+        return null;
       }
     },
     [refreshWatchlists],
@@ -145,35 +149,40 @@ export default function WatchlistProvider({
     async (
       watchlistId: number,
       payload: AddWatchlistItem,
-    ): Promise<"success" | "error"> => {
+    ): Promise<WatchlistItemApiResponse> => {
       try {
-        await addItemToWatchlistClient(watchlistId, payload);
+        const res = await addItemToWatchlistClient(watchlistId, payload);
 
         await refreshWatchlists();
 
         toast.success("Added to watchlist");
 
-        return "success";
+        return res;
       } catch (error) {
         console.error(error);
         toast.error("Failed to add item to watchlist");
-        return "error";
+        return { message: "error", item: null };
       }
     },
     [refreshWatchlists],
   );
 
   const updateWatchlistItem = useCallback(
-    async (itemId: number, payload: UpdateWatchlistItem): Promise<void> => {
+    async (
+      itemId: number,
+      payload: UpdateWatchlistItem,
+    ): Promise<WatchlistItemApiResponse> => {
       try {
-        await updateWatchlistItemClient(itemId, payload);
+        const res = await updateWatchlistItemClient(itemId, payload);
 
         await refreshWatchlists();
 
         toast.success("Watchlist item updated");
+        return res;
       } catch (error) {
         console.error(error);
         toast.error("Failed to update watchlist item");
+        return { message: "error", item: null };
       }
     },
     [refreshWatchlists],
@@ -185,29 +194,6 @@ export default function WatchlistProvider({
 
       await refreshWatchlists();
 
-      // setWatchlistsResponse((current) => {
-      //   if (!current?.results) return current;
-
-      //   return {
-      //     ...current,
-      //     results: {
-      //       ...current.results,
-      //       created: current.results.created?.filter(
-      //         (watchlist) => watchlist.id !== watchlistId,
-      //       ),
-      //       forked: current.results.forked?.filter(
-      //         (watchlist) => watchlist.id !== watchlistId,
-      //       ),
-      //       shared: current.results.shared?.filter(
-      //         (watchlist) => watchlist.id !== watchlistId,
-      //       ),
-      //       bookmarked: current.results.bookmarked?.filter(
-      //         (watchlist) => watchlist.id !== watchlistId,
-      //       ),
-      //     },
-      //   };
-      // });
-
       toast.success("Watchlist deleted");
     } catch (error) {
       console.error(error);
@@ -215,42 +201,48 @@ export default function WatchlistProvider({
     }
   }, []);
 
-  const deleteWatchlistItem = useCallback(async (itemId: number) => {
-    try {
-      await deleteWatchlistItemClient(itemId);
+  const deleteWatchlistItem = useCallback(
+    async (itemId: number): Promise<WatchlistItemApiResponse> => {
+      try {
+        const res = await deleteWatchlistItemClient(itemId);
 
-      setWatchlistsResponse((current) => {
-        if (!current?.results) return current;
+        setWatchlistsResponse((current) => {
+          if (!current?.results) return current;
 
-        const removeItemFromWatchlist = (
-          watchlist: WatchlistDetailOut,
-        ): WatchlistDetailOut => {
-          return {
-            ...watchlist,
-            items: watchlist.items?.filter((item) => item.id !== itemId) ?? [],
+          const removeItemFromWatchlist = (
+            watchlist: WatchlistDetailOut,
+          ): WatchlistDetailOut => {
+            return {
+              ...watchlist,
+              items:
+                watchlist.items?.filter((item) => item.id !== itemId) ?? [],
+            };
           };
-        };
 
-        return {
-          ...current,
-          results: {
-            ...current.results,
-            created: current.results.created?.map(removeItemFromWatchlist),
-            forked: current.results.forked?.map(removeItemFromWatchlist),
-            shared: current.results.shared?.map(removeItemFromWatchlist),
-            bookmarked: current.results.bookmarked?.map(
-              removeItemFromWatchlist,
-            ),
-          },
-        };
-      });
+          return {
+            ...current,
+            results: {
+              ...current.results,
+              created: current.results.created?.map(removeItemFromWatchlist),
+              forked: current.results.forked?.map(removeItemFromWatchlist),
+              shared: current.results.shared?.map(removeItemFromWatchlist),
+              bookmarked: current.results.bookmarked?.map(
+                removeItemFromWatchlist,
+              ),
+            },
+          };
+        });
 
-      toast.success("Removed from watchlist");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to remove item from watchlist");
-    }
-  }, []);
+        toast.success("Removed from watchlist");
+        return res;
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to remove item from watchlist");
+        return { message: "error", item: null };
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!hasLoaded) {

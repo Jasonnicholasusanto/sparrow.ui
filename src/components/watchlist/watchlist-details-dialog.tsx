@@ -35,6 +35,7 @@ import { searchQuotesClient } from "@/lib/data/client/search";
 import { getLogoUrl } from "@/lib/utils/tickerLogo";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatWatchlistDate } from "@/lib/utils/formatDates";
 
 type WatchlistDetailsDialogProps = {
   trigger: React.ReactNode;
@@ -436,7 +437,7 @@ export function WatchlistDetailsDialog({
 
     const result = await addItemToWatchlist(watchlist.id, payload);
 
-    return result === "success";
+    return result.item !== null;
   }
 
   return (
@@ -469,12 +470,35 @@ export function WatchlistDetailsDialog({
 
           <Separator />
 
-          <div className="text-sm text-muted-foreground flex items-center justify-between">
-            {watchlist.items?.length
-              ? `${watchlist.items.length} item${
-                  watchlist.items.length > 1 ? "s" : ""
-                }`
-              : "No items in this watchlist."}
+          <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>
+                {watchlist.items?.length
+                  ? `${watchlist.items.length} item${
+                      watchlist.items.length > 1 ? "s" : ""
+                    }`
+                  : "No items in this watchlist."}
+              </span>
+
+              {watchlist.createdAt && (
+                <>
+                  <span className="hidden text-border sm:inline">|</span>
+                  <span>
+                    Created {formatWatchlistDate(new Date(watchlist.createdAt))}
+                  </span>
+                </>
+              )}
+
+              {watchlist.updatedAt && (
+                <>
+                  <span className="hidden text-border sm:inline">|</span>
+                  <span>
+                    Last updated{" "}
+                    {formatWatchlistDate(new Date(watchlist.updatedAt))}
+                  </span>
+                </>
+              )}
+            </div>
 
             <Button
               type="button"
