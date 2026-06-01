@@ -109,9 +109,9 @@ function TickerAvatarGroup({
 
         return (
           <div key={`${ticker.symbol}-${index}`} className="-ml-2 first:ml-0">
-            <Avatar className="h-8 w-8 border-2 border-background">
+            <Avatar className="h-8 w-8 rounded-full">
               <AvatarImage src={logoUrl} alt={`${ticker.symbol} logo`} />
-              <AvatarFallback className="text-[10px] font-medium">
+              <AvatarFallback className="rounded-full text-[10px] font-medium">
                 {ticker.symbol.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>

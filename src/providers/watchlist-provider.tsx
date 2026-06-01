@@ -188,18 +188,21 @@ export default function WatchlistProvider({
     [refreshWatchlists],
   );
 
-  const deleteWatchlist = useCallback(async (watchlistId: number) => {
-    try {
-      await deleteWatchlistClient(watchlistId);
+  const deleteWatchlist = useCallback(
+    async (watchlistId: number) => {
+      try {
+        await deleteWatchlistClient(watchlistId);
 
-      await refreshWatchlists();
+        await refreshWatchlists();
 
-      toast.success("Watchlist deleted");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to delete watchlist");
-    }
-  }, []);
+        toast.success("Watchlist deleted");
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to delete watchlist");
+      }
+    },
+    [refreshWatchlists],
+  );
 
   const deleteWatchlistItem = useCallback(
     async (itemId: number): Promise<WatchlistItemApiResponse> => {

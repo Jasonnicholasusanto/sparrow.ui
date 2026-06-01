@@ -259,9 +259,9 @@ export function WatchlistDetailsItemCard({
               <Tooltip delayDuration={500}>
                 <TooltipTrigger asChild>
                   <div className="flex w-lg flex-row gap-3">
-                    <Avatar className="h-10 w-10 rounded-xl border bg-background">
+                    <Avatar className="h-10 w-10 rounded-full">
                       <AvatarImage src={logoUrl} alt={`${item.symbol} logo`} />
-                      <AvatarFallback className="rounded-xl text-xs font-semibold">
+                      <AvatarFallback className="rounded-full text-xs font-semibold">
                         {item.symbol.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>

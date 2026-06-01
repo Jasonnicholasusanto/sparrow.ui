@@ -36,6 +36,12 @@ export const Endpoints = {
     DeleteWatchlistItem: (itemId: number) => `/item/${itemId}`,
     DeleteWatchlist: (watchlistId: number) => `/${watchlistId}`,
   },
+  WatchlistHistory: {
+    BaseVersion: "v1",
+    Base: "/watchlist-history",
+    MyWatchlistHistory: `/me`,
+    WatchlistHistoryById: (watchlistId: number) => `/watchlist/${watchlistId}`,
+  },
   Tags: {
     BaseVersion: "v1",
     Base: "/tags",
