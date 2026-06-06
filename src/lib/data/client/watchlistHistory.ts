@@ -5,8 +5,8 @@ import { WatchlistAuditEventOut } from "@/schemas/watchlistHistory";
 export async function getMyWatchlistHistory(): Promise<
   WatchlistAuditEventOut[]
 > {
-  return clientApiClient<WatchlistAuditEventOut[]>(
-    Endpoints.WatchlistHistory.MyWatchlistHistory,
+  return clientApiClient<WatchlistAuditEventOut[] | []>(
+    `${Endpoints.WatchlistHistory.Base}${Endpoints.WatchlistHistory.MyWatchlistHistory}`,
     {
       method: "GET",
       version: Endpoints.WatchlistHistory.BaseVersion,
@@ -17,8 +17,8 @@ export async function getMyWatchlistHistory(): Promise<
 export async function getWatchlistHistory(
   watchlistId: number,
 ): Promise<WatchlistAuditEventOut[]> {
-  return clientApiClient<WatchlistAuditEventOut[]>(
-    Endpoints.WatchlistHistory.WatchlistHistoryById(watchlistId),
+  return clientApiClient<WatchlistAuditEventOut[] | []>(
+    `${Endpoints.WatchlistHistory.Base}${Endpoints.WatchlistHistory.WatchlistHistoryById(watchlistId)}`,
     {
       method: "GET",
       version: Endpoints.WatchlistHistory.BaseVersion,

@@ -87,10 +87,6 @@ export default function StockChartBody({ stock }: StockChartProps) {
   async function fetchHistory() {
     setLoading(true);
 
-    console.log(
-      `Fetching history for ${stock.symbol} with interval ${interval}, period ${period}, includeExtendedHours: ${includeExtendedHours}`,
-    );
-
     try {
       const data = await getStockHistoryClient(
         stock.symbol,

@@ -101,6 +101,11 @@ export const Endpoints = {
       PredefinedQueryResults: (category: string, limit = 25) =>
         `/predefined-queries-result/${category}?limit=${limit}`,
     },
+    News: {
+      BaseVersion: "v1",
+      Base: "/news",
+      StockNews: (symbol: string) => `/stocks/${symbol}`,
+    },
   },
   SearchHistory: {
     BaseVersion: "v1",

@@ -19,6 +19,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WatchlistHistoryTimeline } from "./watchlist-history-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -509,27 +511,47 @@ export function WatchlistDetailsDialog({
               Add stocks or funds
             </Button>
           </div>
-          <ScrollArea className="max-h-112 pr-3">
-            <div className="space-y-3">
-              {watchlist.items?.length ? (
-                watchlist.items.map((item) => (
-                  <WatchlistDetailsItemCard
-                    key={item.id}
-                    item={item}
-                    onRemove={() => deleteWatchlistItem(item.id)}
-                    onUpdate={(payload) =>
-                      updateWatchlistItem(item.id, payload)
-                    }
-                    onNavigate={() => setOpen(false)}
-                  />
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-                  This watchlist has no items.
+          <Tabs defaultValue="items" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 rounded-2xl">
+              <TabsTrigger value="items" className="rounded-l-2xl">
+                Current holdings
+              </TabsTrigger>
+              <TabsTrigger value="history" className="rounded-r-2xl">
+                Lineage
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="items" className="mt-0">
+              <ScrollArea className="max-h-100 pr-3">
+                <div className="space-y-2 max-h-100">
+                  {watchlist.items?.length ? (
+                    watchlist.items.map((item) => (
+                      <WatchlistDetailsItemCard
+                        key={item.id}
+                        item={item}
+                        onRemove={() => deleteWatchlistItem(item.id)}
+                        onUpdate={(payload) =>
+                          updateWatchlistItem(item.id, payload)
+                        }
+                        onNavigate={() => setOpen(false)}
+                      />
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+                      This watchlist has no items.
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0">
+              <WatchlistHistoryTimeline
+                watchlistId={watchlist.id}
+                enabled={open}
+              />
+            </TabsContent>
+          </Tabs>
 
           {isOwnProfile ? (
             <>

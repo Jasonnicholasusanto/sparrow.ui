@@ -6,10 +6,16 @@ import { serverApiClient } from "@/lib/api/server";
 import { stockDataPaths } from "../shared/stock";
 
 export async function getStockInfo(ticker: string) {
-  return serverApiClient<StockInfoResponse>(stockDataPaths.info(ticker), {
-    method: "GET",
-    version: Endpoints.Yfinance.Stocks.BaseVersion,
-  });
+  const test = await serverApiClient<StockInfoResponse>(
+    stockDataPaths.info(ticker),
+    {
+      method: "GET",
+      version: Endpoints.Yfinance.Stocks.BaseVersion,
+    },
+  );
+  console.log("Fetched stock info:", test);
+
+  return test;
 }
 
 export async function getStockHistory(

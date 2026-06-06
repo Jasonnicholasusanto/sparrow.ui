@@ -63,8 +63,8 @@ export interface StockInfoResponse {
   revenueHigh?: number;
   earningsQuarterlyGrowth?: number;
   earningsTimestamp?: number;
-  trailingPE?: number;
-  forwardPE?: number;
+  trailingPe?: number;
+  forwardPe?: number;
   trailingEps?: number;
   forwardEps?: number;
   epsTrailingTwelveMonths?: number;
