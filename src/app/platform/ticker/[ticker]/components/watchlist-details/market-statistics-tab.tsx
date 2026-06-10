@@ -19,6 +19,7 @@ import {
   hasNumber,
 } from "@/lib/utils/stockDetails";
 import { DetailsSection } from "./details-section";
+import { PriceRangeIndicator } from "./price-range-indicator";
 
 type MarketStatisticsTabProps = {
   stock: StockInfoResponse;
@@ -65,14 +66,14 @@ export function MarketStatisticsTab({ stock }: MarketStatisticsTabProps) {
               label: "Bid",
               value: formatCurrency(stock.bid, currency),
               description: hasNumber(stock.bidSize)
-                ? `${formatNumber(stock.bidSize, 0)} lots`
+                ? `${formatNumber(stock.bidSize, 0)} lot(s)`
                 : undefined,
             },
             {
               label: "Ask",
               value: formatCurrency(stock.ask, currency),
               description: hasNumber(stock.askSize)
-                ? `${formatNumber(stock.askSize, 0)} lots`
+                ? `${formatNumber(stock.askSize, 0)} lot(s)`
                 : undefined,
             },
             {
@@ -127,70 +128,65 @@ export function MarketStatisticsTab({ stock }: MarketStatisticsTabProps) {
 
       <DetailsSection
         title="Price ranges"
-        description="Current position against historical price levels"
+        description="Current price position within recent trading ranges"
         icon={ArrowLeftRight}
         className="xl:col-span-2"
       >
-        <MetricGrid
-          columns={4}
-          items={[
-            {
-              label: "52-week low",
-              value: formatCurrency(stock.fiftyTwoWeekLow, currency),
-            },
-            {
-              label: "52-week high",
-              value: formatCurrency(stock.fiftyTwoWeekHigh, currency),
-            },
-            {
-              label: "50-day average",
-              value: formatCurrency(stock.fiftyDayAverage, currency),
-            },
-            {
-              label: "200-day average",
-              value: formatCurrency(stock.twoHundredDayAverage, currency),
-            },
-            {
-              label: "All-time low",
-              value: formatCurrency(stock.allTimeLow, currency),
-            },
-            {
-              label: "All-time high",
-              value: formatCurrency(stock.allTimeHigh, currency),
-            },
-            {
-              label: "52-week change",
-              value: formatPercent(stock.fiftyTwoWeekChangePercent, {
-                alreadyPercentage: true,
-                signed: true,
-              }),
-            },
-            {
-              label: "S&P 500 change",
-              value: formatPercent(stock.SandP52WeekChange, {
-                alreadyPercentage: true,
-                signed: true,
-              }),
-            },
-          ]}
-        />
+        <div className="grid gap-8 md:grid-cols-2">
+          <PriceRangeIndicator
+            label="Day range"
+            low={stock.dayLow ?? stock.regularMarketDayLow}
+            high={stock.dayHigh ?? stock.regularMarketDayHigh}
+            currentPrice={price}
+            currency={currency}
+          />
 
-        {rangePosition !== null && (
-          <div className="mt-6">
-            <div className="mb-2 flex justify-between text-xs text-muted-foreground">
-              <span>{formatCurrency(stock.fiftyTwoWeekLow, currency)}</span>
-              <span>Current price position</span>
-              <span>{formatCurrency(stock.fiftyTwoWeekHigh, currency)}</span>
-            </div>
+          <PriceRangeIndicator
+            label="52-week range"
+            low={stock.fiftyTwoWeekLow}
+            high={stock.fiftyTwoWeekHigh}
+            currentPrice={price}
+            currency={currency}
+          />
+        </div>
 
-            <div className="relative h-2 rounded-full bg-muted">
-              <div
-                className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground shadow"
-                style={{ left: `${rangePosition}%` }}
-              />
-            </div>
-          </div>
-        )}
+        <div className="mt-8 border-t pt-6">
+          <MetricGrid
+            columns={5}
+            items={[
+              {
+                label: "50-day average",
+                value: formatCurrency(stock.fiftyDayAverage, currency),
+              },
+              {
+                label: "200-day average",
+                value: formatCurrency(stock.twoHundredDayAverage, currency),
+              },
+              {
+                label: "52-week change",
+                value: formatPercent(stock.fiftyTwoWeekChangePercent, {
+                  alreadyPercentage: true,
+                  signed: true,
+                }),
+              },
+              {
+                label: "S&P 500 change",
+                value: formatPercent(stock.SandP52WeekChange, {
+                  alreadyPercentage: true,
+                  signed: true,
+                }),
+              },
+              {
+                label: "All-time low",
+                value: formatCurrency(stock.allTimeLow, currency),
+              },
+              {
+                label: "All-time high",
+                value: formatCurrency(stock.allTimeHigh, currency),
+              },
+            ]}
+          />
+        </div>
       </DetailsSection>
 
       <DetailsSection

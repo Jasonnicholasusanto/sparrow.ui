@@ -25,6 +25,7 @@ export function formatCurrency(
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
+      currencyDisplay: "code",
       maximumFractionDigits,
     }).format(value);
   } catch {
@@ -40,10 +41,17 @@ export function formatCompactCurrency(value: NullableNumber, currency = "USD") {
       style: "currency",
       currency,
       notation: "compact",
+      currencyDisplay: "code",
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    return `${currency} ${formatCompactNumber(value)}`;
+    // Derive the compact suffix (e.g. "1.5K") then format as currency
+    const compact = new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: 2,
+    }).format(value);
+    return formatCurrency(value, currency) // fallback with symbol
+      .replace(new Intl.NumberFormat("en-US").format(value), compact);
   }
 }
 

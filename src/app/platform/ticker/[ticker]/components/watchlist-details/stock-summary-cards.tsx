@@ -5,15 +5,46 @@ import type { StockInfoResponse } from "@/schemas/stock";
 import { MetricCard } from "./metric-card";
 import {
   formatCompactCurrency,
+  formatCurrency,
   formatNumber,
   formatPercent,
   formatRatio,
   hasNumber,
 } from "@/lib/utils/stockDetails";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type StockSummaryCardsProps = {
   stock: StockInfoResponse;
 };
+
+function getRecommendationBadgeClass(
+  recommendation: string | null | undefined,
+) {
+  if (!recommendation) {
+    return "border-muted-foreground/20 bg-muted text-muted-foreground";
+  }
+
+  const value = recommendation.toLowerCase();
+
+  if (
+    value.includes("buy") ||
+    value.includes("outperform") ||
+    value.includes("overweight")
+  ) {
+    return "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+  }
+
+  if (
+    value.includes("sell") ||
+    value.includes("underperform") ||
+    value.includes("underweight")
+  ) {
+    return "border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400";
+  }
+
+  return "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400";
+}
 
 export function StockSummaryCards({ stock }: StockSummaryCardsProps) {
   const currency = stock.currency ?? stock.financialCurrency ?? "USD";
@@ -26,7 +57,7 @@ export function StockSummaryCards({ stock }: StockSummaryCardsProps) {
       : null;
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-5">
       <MetricCard
         label="Market capitalisation"
         value={formatCompactCurrency(stock.marketCap, currency)}
@@ -35,11 +66,22 @@ export function StockSummaryCards({ stock }: StockSummaryCardsProps) {
       />
 
       <MetricCard
-        label="Trailing P/E"
+        label="P/E ratio (TTM)"
         value={formatRatio(stock.trailingPe)}
         description={
           hasNumber(stock.forwardPe)
             ? `Forward: ${formatRatio(stock.forwardPe)}`
+            : undefined
+        }
+        icon={BarChart3}
+      />
+
+      <MetricCard
+        label="EPS (TTM)"
+        value={formatCurrency(stock.trailingEps ?? stock.epsForward, currency)}
+        description={
+          hasNumber(stock.forwardEps)
+            ? `Forward: ${formatCurrency(stock.forwardEps, currency)}`
             : undefined
         }
         icon={BarChart3}
@@ -63,21 +105,43 @@ export function StockSummaryCards({ stock }: StockSummaryCardsProps) {
       />
 
       <MetricCard
-        label="Analyst consensus"
+        label="Analyst target price"
         value={
-          stock.recommendationKey
-            ? stock.recommendationKey.replaceAll("_", " ")
-            : "—"
+          <div className="flex flex-wrap items-center gap-2">
+            <span>{formatCurrency(stock.targetMeanPrice, currency)}</span>
+
+            {stock.recommendationKey && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "capitalize",
+                  getRecommendationBadgeClass(stock.recommendationKey),
+                )}
+              >
+                {stock.recommendationKey.replaceAll("_", " ")}
+              </Badge>
+            )}
+          </div>
         }
         description={
-          hasNumber(analystUpside)
-            ? `${formatPercent(analystUpside, {
+          hasNumber(analystUpside) ? (
+            <p
+              className={cn(
+                analystUpside >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400",
+              )}
+            >
+              {formatPercent(analystUpside, {
                 signed: true,
-              })} to mean target`
-            : `${formatNumber(
-                stock.numberOfAnalystOpinions,
-                0,
-              )} analyst opinions`
+              })}{" "}
+              to mean target
+            </p>
+          ) : hasNumber(stock.numberOfAnalystOpinions) ? (
+            <p>
+              {formatNumber(stock.numberOfAnalystOpinions, 0)} analyst opinions
+            </p>
+          ) : null
         }
         icon={Gauge}
         trend={

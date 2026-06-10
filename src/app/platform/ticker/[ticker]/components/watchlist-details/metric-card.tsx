@@ -40,7 +40,7 @@ export function MetricCard({
 
         <div
           className={cn(
-            "mt-2 text-lg font-semibold tracking-tight",
+            "mt-1 text-lg font-semibold tracking-tight",
             trend === "positive" && "text-emerald-600 dark:text-emerald-400",
             trend === "negative" && "text-red-600 dark:text-red-400",
           )}
