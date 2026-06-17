@@ -2,16 +2,8 @@
 
 import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarImage,
-} from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { WatchlistDetailOut } from "@/schemas/watchlist";
-import { environment } from "@/lib/utils/env";
 import { WatchlistDetailsDialog } from "@/components/watchlist/watchlist-details-dialog";
 import {
   ContextMenu,
@@ -20,7 +12,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { getLogoUrl } from "@/lib/utils/tickerLogo";
+import { TickerAvatarGroup } from "@/components/watchlist/watchlist-ticker-avatar-group";
 
 type SidebarWatchlistCardProps = {
   watchlist: WatchlistDetailOut;
@@ -118,33 +110,6 @@ function ChangeBadge({ value }: { value: number | null }) {
   );
 }
 
-function WatchlistAvatarGroup({ items }: { items: WatchlistItemLike[] }) {
-  const visible = items.slice(0, 7);
-  const remaining = Math.max(items.length - visible.length, 0);
-
-  return (
-    <AvatarGroup>
-      {visible.map((item) => {
-        const symbol = item.symbol;
-
-        return (
-          <Avatar
-            key={`${item.id}-${symbol}`}
-            className="h-8 w-8 border border-background"
-          >
-            <AvatarImage src={getLogoUrl(symbol)} alt={`${symbol} logo`} />
-            <AvatarFallback className="text-[10px] font-semibold">
-              {symbol.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        );
-      })}
-
-      {remaining > 0 ? <AvatarGroupCount>+{remaining}</AvatarGroupCount> : null}
-    </AvatarGroup>
-  );
-}
-
 export function SidebarWatchlistCard({
   watchlist,
   isOwnProfile,
@@ -196,7 +161,7 @@ export function SidebarWatchlistCard({
               </div>
 
               {items.length ? (
-                <WatchlistAvatarGroup items={items} />
+                <TickerAvatarGroup tickers={items} />
               ) : (
                 <div className="rounded-xl border border-dashed px-3 py-2 text-xs text-muted-foreground">
                   No items added

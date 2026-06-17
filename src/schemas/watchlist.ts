@@ -72,6 +72,17 @@ export interface WatchlistItemOut extends WatchlistItemBase {
   createdAt: string;
   updatedAt: string;
   tickerDetails: TickerMarketSnapshotResponse;
+  positionDetails: WatchlistItemPositionDetails;
+}
+
+export interface WatchlistItemApiResponse {
+  message: string;
+  item: WatchlistItemOut | null;
+}
+
+export interface AddWatchlistItemBulkApiResponse {
+  count: number;
+  items: WatchlistItemOut[] | [];
 }
 
 export interface WatchlistDetailCreatePayload {
@@ -183,4 +194,13 @@ export interface UserWatchlistsResponse {
   limit: number;
   offset: number;
   results: UserWatchlistsGroupedResultsOut;
+}
+
+export interface WatchlistItemPositionDetails {
+  quantity: number | null;
+  marketValue: number | null;
+  previousMarketValue: number | null;
+  dayChangeValue: number | null;
+  dayChangePercent: number | null;
+  currency: string | null;
 }

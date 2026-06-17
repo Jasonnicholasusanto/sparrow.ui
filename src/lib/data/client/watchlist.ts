@@ -6,6 +6,8 @@ import {
   GetMyWatchlistsResponse,
   UpdateWatchlistItem,
   WatchlistDetailCreatePayload,
+  WatchlistDetailOut,
+  WatchlistItemApiResponse,
 } from "@/schemas/watchlist";
 import { clientApiClient } from "@/lib/api/client";
 import { Endpoints } from "@/lib/api/endpoints";
@@ -40,8 +42,8 @@ export async function getMyWatchlistsClient(): Promise<GetMyWatchlistsResponse> 
 export async function addItemToWatchlistClient(
   watchlistId: number,
   payload: AddWatchlistItem,
-): Promise<{ message: string }> {
-  return clientApiClient<{ message: string }>(
+): Promise<WatchlistItemApiResponse> {
+  return clientApiClient<WatchlistItemApiResponse>(
     watchlistDataPaths.addWatchlistItem(watchlistId),
     {
       method: "POST",
@@ -67,8 +69,8 @@ export async function createWatchlistClient(
 export async function updateWatchlistClient(
   watchlistId: number,
   payload: WatchlistDetailCreatePayload,
-): Promise<{ message: string }> {
-  return clientApiClient<{ message: string }>(
+): Promise<WatchlistDetailOut | null> {
+  return clientApiClient<WatchlistDetailOut | null>(
     watchlistDataPaths.update(watchlistId),
     {
       method: "PATCH",
@@ -91,8 +93,8 @@ export async function deleteWatchlistClient(watchlistId: number) {
 export async function updateWatchlistItemClient(
   itemId: number,
   payload: UpdateWatchlistItem,
-): Promise<{ message: string }> {
-  return clientApiClient<{ message: string }>(
+): Promise<WatchlistItemApiResponse> {
+  return clientApiClient<WatchlistItemApiResponse>(
     watchlistDataPaths.updateWatchlistItem(itemId),
     {
       method: "PATCH",
@@ -102,8 +104,10 @@ export async function updateWatchlistItemClient(
   );
 }
 
-export async function deleteWatchlistItemClient(itemId: number) {
-  return clientApiClient<{ message: string }>(
+export async function deleteWatchlistItemClient(
+  itemId: number,
+): Promise<WatchlistItemApiResponse> {
+  return clientApiClient<WatchlistItemApiResponse>(
     watchlistDataPaths.deleteItem(itemId),
     {
       method: "DELETE",

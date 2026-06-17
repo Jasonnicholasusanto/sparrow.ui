@@ -36,6 +36,12 @@ export const Endpoints = {
     DeleteWatchlistItem: (itemId: number) => `/item/${itemId}`,
     DeleteWatchlist: (watchlistId: number) => `/${watchlistId}`,
   },
+  WatchlistHistory: {
+    BaseVersion: "v1",
+    Base: "/watchlist-history",
+    MyWatchlistHistory: `/me`,
+    WatchlistHistoryById: (watchlistId: number) => `/watchlist/${watchlistId}`,
+  },
   Tags: {
     BaseVersion: "v1",
     Base: "/tags",
@@ -94,6 +100,11 @@ export const Endpoints = {
       FundValidInputs: "/fund-valid-inputs",
       PredefinedQueryResults: (category: string, limit = 25) =>
         `/predefined-queries-result/${category}?limit=${limit}`,
+    },
+    News: {
+      BaseVersion: "v1",
+      Base: "/news",
+      StockNews: (symbol: string) => `/stocks/${symbol}`,
     },
   },
   SearchHistory: {

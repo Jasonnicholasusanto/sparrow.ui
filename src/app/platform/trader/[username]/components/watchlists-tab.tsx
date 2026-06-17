@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { WatchlistDetailOut } from "@/schemas/watchlist";
-import { WatchlistCard } from "./watchlist-card";
+import { WatchlistCard } from "../../../../../components/watchlist/watchlist-card";
 
 type WatchlistsTabProps = {
   watchlists: WatchlistDetailOut[];

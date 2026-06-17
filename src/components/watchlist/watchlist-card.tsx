@@ -1,0 +1,112 @@
+"use client";
+
+import { Globe, Lock, Users } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { WatchlistDetailOut } from "@/schemas/watchlist";
+import { WatchlistDetailsDialog } from "./watchlist-details-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getLogoUrl } from "@/lib/utils/tickerLogo";
+import { TickerAvatarGroup } from "./watchlist-ticker-avatar-group";
+
+type WatchlistCardProps = {
+  watchlist: WatchlistDetailOut;
+  isOwnProfile: boolean;
+  onRefresh: () => void | Promise<void>;
+};
+
+function getVisibilityIcon(visibility: string) {
+  const normalized = visibility.toLowerCase();
+
+  if (normalized === "private") return <Lock className="h-3.5 w-3.5" />;
+  if (normalized === "shared") return <Users className="h-3.5 w-3.5" />;
+  return <Globe className="h-3.5 w-3.5" />;
+}
+
+export function WatchlistCard({
+  watchlist,
+  isOwnProfile,
+  onRefresh,
+}: WatchlistCardProps) {
+  const itemCount = watchlist.items?.length ?? 0;
+
+  return (
+    <WatchlistDetailsDialog
+      watchlist={watchlist}
+      isOwnProfile={isOwnProfile}
+      onRefresh={onRefresh}
+      trigger={
+        <button
+          type="button"
+          className="flex h-full min-h-44 flex-col rounded-2xl border bg-card p-4 text-left transition hover:bg-muted/40"
+        >
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-base font-semibold">
+                      {watchlist.name}
+                    </h3>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 gap-1 rounded-full"
+                  >
+                    {getVisibilityIcon(watchlist.visibility)}
+                    {watchlist.visibility}
+                  </Badge>
+                </div>
+
+                <div className="mt-1 min-h-5">
+                  {watchlist.description && (
+                    <p className="line-clamp-2 text-xs text-muted-foreground">
+                      {watchlist.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-auto pt-4 space-y-3">
+                  {watchlist.items?.length ? (
+                    <TickerAvatarGroup tickers={watchlist.items} />
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary" className="rounded-full">
+                      {itemCount} items
+                    </Badge>
+
+                    {watchlist.tags?.slice(0, 3).map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="outline"
+                        className="rounded-full"
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+
+                    {(watchlist.tags?.length ?? 0) > 3 ? (
+                      <Badge variant="outline" className="rounded-full">
+                        +{(watchlist.tags?.length ?? 0) - 3}
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{watchlist.name}</p>
+            </TooltipContent>
+          </Tooltip>
+        </button>
+      }
+    />
+  );
+}

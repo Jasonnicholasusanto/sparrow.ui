@@ -1,9 +1,9 @@
 import StockHeader from "./components/header";
 import { Suspense } from "react";
 import StockChartBody from "./components/chart-body";
-import StockDetails from "./components/details";
 import { getStockInfo } from "@/lib/data/server/stock";
 import { StockInfoResponse } from "@/schemas/stock";
+import StockDetails from "./components/watchlist-details/stock-details";
 
 export default async function StocksPage({
   params,
